@@ -1,0 +1,22 @@
+{
+    "sourceFile": "frontend/src/App.jsx",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 1,
+            "patches": [
+                {
+                    "date": 1791356982972,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1791914967221,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -2,11 +2,25 @@\n import Footer from \"./Components/Footer\";\n import ChatBot from \"./Components/Chatbot\";\n import Home from \"./Pages/Home\";\n import Events from \"./Events\";\n+import { links } from \"./data\";\n+import { BrowserRouter, Routes, Route } from \"react-router-dom\";\n+\n export default function App() {\n   return (\n     <>\n+          <BrowserRouter>\n+        <Routes>\n+                  <Route path=\"/\" element={<Home />} />{\" \"}\n+\n+          <Route path=\"/Navbar\" element={<Navbar />} />{\" \"}\n+               <Route path=\"/Navbar\" element={<Home />} />{\" \"}\n+           <Route path=\"/Navbar\" element={<Footer />} />{\" \"}\n+           <Route path=\"/Navbar\" element={<ChatBot />} />{\" \"}\n+             <Route path=\"/Navbar\" element={<Events />} />{\" \"}\n+             <Route path=\"/Navbar\" element={</Routes>\n+      </BrowserRouter>\n       <Navbar />\n       <Home />\n       <Footer />\n       <ChatBot />\n"
+                }
+            ],
+            "date": 1791356982972,
+            "name": "Commit-0",
+            "content": "import Navbar from \"./Components/Navbar\";\nimport Footer from \"./Components/Footer\";\nimport ChatBot from \"./Components/Chatbot\";\nimport Home from \"./Pages/Home\";\n\nexport default function App() {\n  return (\n    <>\n      <Navbar />\n      <Home />\n      <Footer />\n      <ChatBot />\n    </>\n  );\n}"
+        }
+    ]
+}
