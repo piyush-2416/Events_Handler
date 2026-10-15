@@ -1,13 +1,15 @@
-/* Shared data: Navbar, Footer aur Home teeno isse use karte hain */
 
 export const links = [
   { label: "📊DashBoard", href: "#home" },
-  { label: "🔍 Explore Events", to: "/events" },  { label: "📅 My Events", href: "#products" },
+  { label: "🔍 Explore Events", to: "/events" },
+  { label: "🏢 Vendors", to: "/Vendors", href: "#about" },
+  { label: "🎪Venues", to: "/Venues", href: "#Venues" },
+  { label: "📦 Packages ",to:"/packages", href: "#contact" },
+  { label: "📅 My Events", href: "#products" },
   { label: "🎟️ Bookings", href: "#services" },
-  {label: "🏢 Vendors", href: "#about" },
   { label: "❤️ Wishlist", href: "#contact" },
-  { label: "📦 Packages ", href: "#contact" },
- { label: "💬 Reviews & Feedback", href: "#contact" },
+
+  { label: "💬 Reviews & Feedback", href: "#contact" },
   { label: "👤 My Profile ", href: "#contact" },
 ];
 
@@ -17,9 +19,19 @@ export const categories = [
   { name: "Corporate", sub: "Build together", icon: "💼", bg: "bg-sky-50" },
   { name: "Engagement", sub: "Say yes", icon: "💖", bg: "bg-pink-50" },
   { name: "Anniversary", sub: "Cherish moments", icon: "🥂", bg: "bg-sky-100" },
-  { name: "Baby Shower", sub: "Little beginnings", icon: "🍼", bg: "bg-teal-50" },
+  {
+    name: "Baby Shower",
+    sub: "Little beginnings",
+    icon: "🍼",
+    bg: "bg-teal-50",
+  },
   { name: "Parties", sub: "Good vibes", icon: "🎉", bg: "bg-amber-50" },
-  { name: "Festivals", sub: "Feel the culture", icon: "🪔", bg: "bg-yellow-50" },
+  {
+    name: "Festivals",
+    sub: "Feel the culture",
+    icon: "🪔",
+    bg: "bg-yellow-50",
+  },
   { name: "Exhibitions", sub: "Explore & grow", icon: "🏛️", bg: "bg-sky-50" },
   { name: "More", sub: "& much more", icon: "🔳", bg: "bg-sky-100" },
 ];
