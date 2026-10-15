@@ -4,6 +4,9 @@ require("dotenv").config();
 
 const categoriesRoute = require("./routes/categories");
 const eventsRoute = require("./routes/events");
+const vendorsRoute = require("./routes/vendors");
+const venuesRoute = require("./routes/venues");
+const packagesRoute = require("./routes/packages");
 
 const app = express();
 
@@ -14,6 +17,9 @@ app.use(express.json());
 // ---------- Routes ----------
 app.use("/api/categories", categoriesRoute);
 app.use("/api/events", eventsRoute);
+app.use("/api/vendors", vendorsRoute);
+app.use("/api/venues", venuesRoute);
+app.use("/api/packages", packagesRoute);
 
 // Health check
 app.get("/", (req, res) => res.send("EventHandler API running"));
