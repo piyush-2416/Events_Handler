@@ -1,3 +1,4 @@
+/* Shared data: Navbar, Footer aur Home teeno isse use karte hain */
 
 export const links = [
   { label: "📊DashBoard", href: "#home" },
@@ -5,6 +6,8 @@ export const links = [
   { label: "🏢 Vendors", to: "/Vendors", href: "#about" },
   { label: "🎪Venues", to: "/Venues", href: "#Venues" },
   { label: "📦 Packages ",to:"/packages", href: "#contact" },
+  { label: "Budget Planner  ",to:"/Budgetplanner", href: "#contact" },
+  { label: "📅Guest-List", to:"/guestlist/:eventId",href: "#products" },
   { label: "📅 My Events", href: "#products" },
   { label: "🎟️ Bookings", href: "#services" },
   { label: "❤️ Wishlist", href: "#contact" },
