@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { links } from "../data";
 import { Link } from "react-router-dom";
-/* Sidebar ke neeche wali event image (public folder se). Yahan se badal sakte ho */
-const SIDEBAR_IMAGE = "/Birthday_Party_offer.png";
+import Budgetplanner from "../Pages/Budgetplanner";
+import Guestlist from "../Pages/Guestlist";
+ const SIDEBAR_IMAGE = "/Birthday_Party_offer.png";
 
 /* "🔍 Explore Events" -> icon "🔍" + text "Explore Events" (emoji na ho to 🏠 lagega) */
 const splitLabel = (label) => {
   const m = label.match(/^(\p{Extended_Pictographic}\uFE0F?)\s*(.+)$/u);
-  return m ? { icon: m[1], text: m[2].trim() } : { icon: "🏠", text: label.trim() };
+  return m
+    ? { icon: m[1], text: m[2].trim() }
+    : { icon: "🏠", text: label.trim() };
 };
 
 /* NAVBAR + SIDEBAR (hamburger se sidebar khulta hai) */
@@ -64,23 +67,23 @@ export default function Navbar() {
       {/* NAVBAR */}
       <header className="top-0 z-30 fixed inset-x-0 bg-white/90 backdrop-blur border-sky-100 border-b">
         <nav className="flex justify-between items-center mx-auto px-4 max-w-6xl h-16">
-         <div className="flex items-center gap-3">
-   <button
-    ref={toggleBtnRef}
-    onClick={() => setOpen(true)}
-    aria-label="Open menu"
-    aria-expanded={open}
-    aria-controls="sidebar"
-    className="hover:bg-sky-100 p-2 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-white-500 text-slate-700"
-  >
-    <img
-      src="/Even_handler_Logo.png"
-      alt="Eventora logo"
-      className="w-auto h-12 object-contain"
-    />
-  </button>
-</div>
-            
+          <div className="flex items-center gap-3">
+            <button
+              ref={toggleBtnRef}
+              onClick={() => setOpen(true)}
+              aria-label="Open menu"
+              aria-expanded={open}
+              aria-controls="sidebar"
+              className="hover:bg-sky-100 p-2 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-white-500 text-slate-700"
+            >
+              <img
+                src="/Even_handler_Logo.png"
+                alt="Eventora logo"
+                className="w-auto h-12 object-contain"
+              />
+            </button>
+          </div>
+
           {/* </div> */}
 
           {/* Right side: notification bell + user icon */}
@@ -89,7 +92,13 @@ export default function Navbar() {
               aria-label="Notifications"
               className="relative hover:bg-sky-100 p-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 text-slate-600"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -104,7 +113,13 @@ export default function Navbar() {
               aria-label="User profile"
               className="hover:bg-sky-100 p-2 rounded-full focus:outline-none focus-visible:ring-2 text-slate-600"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -126,10 +141,10 @@ export default function Navbar() {
       />
 
       {/* SIDEBAR */}
-     <aside
-  id="sidebar"
-  ref={sidebarRef}
-  tabIndex={-1}
+      <aside
+        id="sidebar"
+        ref={sidebarRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-label="Sidebar menu"
@@ -139,90 +154,120 @@ export default function Navbar() {
       >
         {/* Top banner: logo + close + greeting (sab left aligned) */}
         <div className="relative bg-gradient-to-br from-sky-600 to-blue-700 px-4 pt-4 pb-4 overflow-hidden text-white text-left shrink-0">
-          <span aria-hidden="true" className="-top-6 -right-6 absolute bg-white/10 rounded-full w-24 h-24 pointer-events-none" />
-          <span aria-hidden="true" className="right-8 -bottom-8 absolute bg-cyan-300/20 rounded-full w-20 h-20 pointer-events-none" />
+          <span
+            aria-hidden="true"
+            className="-top-6 -right-6 absolute bg-white/10 rounded-full w-24 h-24 pointer-events-none"
+          />
+          <span
+            aria-hidden="true"
+            className="right-8 -bottom-8 absolute bg-cyan-300/20 rounded-full w-20 h-20 pointer-events-none"
+          />
 
           <div className="relative flex justify-between items-center">
             <span className="bg-white shadow-md px-2 py-1 rounded-xl">
-             <Link to="/"> <img src="/Even_handler_Logo.png" alt="Eventora logo" className="w-auto h-8 object-contain" /></Link>
+              <Link to="/">
+                {" "}
+                <img
+                  src="/Even_handler_Logo.png"
+                  alt="Eventora logo"
+                  className="w-auto h-8 object-contain"
+                />
+              </Link>
             </span>
             <button
               onClick={() => setOpen(false)}
               aria-label="Close menu"
               className="hover:bg-white/20 p-1.5 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-white text-white hover:rotate-90 transition"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
                 <path strokeLinecap="round" d="M6 6l12 12M18 6L6 18" />
               </svg>
             </button>
           </div>
           <p className="relative mt-3 font-semibold text-sm">Hi, Guest 👋</p>
-          <p className="relative text-sky-100 text-xs">Let&apos;s plan something special</p>
+          <p className="relative text-sky-100 text-xs">
+            Let&apos;s plan something special
+          </p>
         </div>
 
         {/* Links: icon chip + text, sab start (left) se */}
-      {/* Links: icon chip + text, sab start (left) se */}
-<ul className="flex-1 space-y-1 px-3 py-3 overflow-y-auto">
-  {links.map((l, i) => {
-    const isActive = active === l.label;
-    const { icon, text } = splitLabel(l.label);
+        {/* Links: icon chip + text, sab start (left) se */}
+        <ul className="flex-1 space-y-1 px-3 py-3 overflow-y-auto">
+          {links.map((l, i) => {
+            const isActive = active === l.label;
+            const { icon, text } = splitLabel(l.label);
 
-    return (
-      <li
-        key={l.label}
-        style={{ transitionDelay: open ? `${100 + i * 40}ms` : "0ms" }}
-        className={`transition-all duration-300 motion-reduce:transition-none ${
-          open ? "translate-x-0 opacity-100" : "-translate-x-3 opacity-0"
-        }`}
-      >
-        <Link
-          to={l.to}
-          onClick={() => {
-            setActive(l.label);
-            setOpen(false);
-          }}
-          aria-current={isActive ? "page" : undefined}
-          className={`group flex items-center justify-start gap-3 rounded-xl px-2 py-2 text-left text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
-            isActive
-              ? "bg-gradient-to-r from-white to-white-600    "
-              : "  hover:bg-sky-50 hover:text-sky-700"
-          }`}
-        >
-          <span
-            aria-hidden="true"
-            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-base transition group-hover:scale-110 ${
-              isActive ? "bg-white/20" : "bg-sky-50"
-            }`}
-          >
-            {icon}
-          </span>
-          <span className="flex-1 min-w-0 truncate">{text}</span>
-          <svg
-            className={`h-4 w-4 shrink-0 transition ${
-              isActive ? "opacity-90" : "-translate-x-1 opacity-0 group-hover:translate-x-0 group-hover:opacity-60"
-            }`}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="m9 6 6 6-6 6" />
-          </svg>
-        </Link>
-      </li>
-    );
-  })}
-</ul>
+            return (
+              <li
+                key={l.label}
+                style={{ transitionDelay: open ? `${100 + i * 40}ms` : "0ms" }}
+                className={`transition-all duration-300 motion-reduce:transition-none ${
+                  open
+                    ? "translate-x-0 opacity-100"
+                    : "-translate-x-3 opacity-0"
+                }`}
+              >
+                <Link
+                  to={l.to}
+                  onClick={() => {
+                    setActive(l.label);
+                    setOpen(false);
+                  }}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`group flex items-center justify-start gap-3 rounded-xl px-2 py-2 text-left text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
+                    isActive
+                      ? "bg-gradient-to-r from-white to-white-600    "
+                      : "  hover:bg-sky-50 hover:text-sky-700"
+                  }`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-base transition group-hover:scale-110 ${
+                      isActive ? "bg-white/20" : "bg-sky-50"
+                    }`}
+                  >
+                    {icon}
+                  </span>
+                  <span className="flex-1 min-w-0 truncate">{text}</span>
+                  <svg
+                    className={`h-4 w-4 shrink-0 transition ${
+                      isActive
+                        ? "opacity-90"
+                        : "-translate-x-1 opacity-0 group-hover:translate-x-0 group-hover:opacity-60"
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="m9 6 6 6-6 6"
+                    />
+                  </svg>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
         {/* Neeche: event image card */}
         <div className="bg-sky-50/60 p-3 border-sky-100 border-t shrink-0">
-        
           <a
             href="#plan"
             onClick={() => setOpen(false)}
             className="group/cta inline-flex items-center gap-1 mt-0.5 focus:outline-none font-semibold text-sky-700 hover:text-sky-900 text-xs text-left focus-visible:underline"
           >
             Get started
-            <span className="transition-transform group-hover/cta:translate-x-1">→</span>
+            <span className="transition-transform group-hover/cta:translate-x-1">
+              →
+            </span>
           </a>
         </div>
       </aside>
