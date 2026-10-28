@@ -6,20 +6,19 @@ import Events from "./Pages/Events";
 import { links } from "./data";
 import Vendors from "./Pages/Vendors";
 import Venues from "./Pages/Venues";
-// import Guestlist from "./pages/Guestlist";
 import Guestlist from "./Pages/Guestlist";
+import Vendorsid from "./Pages/Vendorsid";
+import Venuesid from "./Pages/Venuesid";
 
-// import Solver from "./pages/Solver";
 import Eventsid from "./Pages/Eventsid";
 import Solver from "./Pages/Solver";
-// import CreateInvitation from "./CreateInvitation.jsx";
-// import InvitePage from "./InvitePage.jsx";
+
 import CreateInvitation from "./Pages/CreateInvitation";
 import InvitePage from "./Pages/InvitePage";
 import Packages from "./Pages/Packages";
 import Budgetplanner from "./Pages/Budgetplanner";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import FeatureStudio from "./Components/Featurestudio";
+import FeatureStudio from "./Components/Featurestudio";import Auth from "./Pages/Auth";
 export default function App() {
   return (
     <>
@@ -28,7 +27,12 @@ export default function App() {
           <Route path="/solver" element={<Solver />} />
           <Route path="/Navbar" element={<Navbar />} />{" "}
           <Route path="/" element={<Home />} />{" "}
-<Route path="/Eventsid/:id" element={<Eventsid />} />          {/* <Route path="/Doctorid/:id" element={<Doctorid />} /> */}
+                    <Route path="/Auth" element={<Auth />} />{" "}
+
+          <Route path="/Vendorsid/:id" element={<Vendorsid />} />{" "}
+          <Route path="/Eventsid/:id" element={<Eventsid />} />{" "}
+          <Route path="/Venuesid/:id" element={<Venuesid />} />{" "}
+          {/* <Route path="/Doctorid/:id" element={<Doctorid />} /> */}
           <Route path="/Featurestudio" element={<FeatureStudio />} />{" "}
           <Route path="/Budgetplanner" element={<Budgetplanner />} />{" "}
           <Route path="/guestlist/:eventId" element={<Guestlist />} />
