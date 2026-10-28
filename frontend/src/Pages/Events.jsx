@@ -2,6 +2,26 @@ import { useEffect, useMemo, useState } from "react";
 import api from "../api";
 import Navbar from "../Components/Navbar";
 import Footer from "../Components/Footer";
+import {
+  ICONS,
+  Icon,
+  fmt,
+  hideBrokenImage,
+  listingStyles,
+  ListingHero,
+  ListingCard,
+  ViewButton,
+  FilterPanel,
+  Field,
+  Segmented,
+  Toggle,
+  inputCls,
+  ResultsHeader,
+  ActiveChips,
+  CardSkeleton,
+  EmptyState,
+} from "../Components/ListingKit";
+
 const PRICE_MAX = 500000; // slider ka max price. Apne data ke hisaab se badal sakte ho
 const SLIDES = [
   {
@@ -21,26 +41,8 @@ const SLIDES = [
     alt: "Corporate event hall",
   },
 ];
-const hideBrokenImage = (e) => {
-  e.target.style.display = "none";
-};
-const INTERVAL = 5000;
 
 export default function Events() {
-   const [active, setActive] = useState(0);
-  const [paused, setPaused] = useState(false);
- 
-  // Auto-advance (ruk jata hai jab mouse hero par ho)
-  useEffect(() => {
-    if (paused) return;
-    const id = setInterval(
-      () => setActive((i) => (i + 1) % SLIDES.length),
-      INTERVAL
-    );
-    return () => clearInterval(id);
-  }, [paused, active]);
- 
-
   // ---------- Data state ----------
   const [categories, setCategories] = useState([]);
   const [events, setEvents] = useState([]);
@@ -57,7 +59,6 @@ export default function Events() {
   const [duration, setDuration] = useState("any"); // any | short | medium | long
   const [featuredOnly, setFeaturedOnly] = useState(false);
   const [sort, setSort] = useState("default");
-  const [showFilters, setShowFilters] = useState(false); // mobile par toggle
 
   // ---------- Categories fetch ----------
   useEffect(() => {
@@ -105,14 +106,7 @@ export default function Events() {
     return list;
   }, [events, search, minPrice, maxPrice, guests, duration, featuredOnly, sort]);
 
-  // Kitne filters lage hain (badge ke liye)
-  const activeFilters =
-    (search ? 1 : 0) +
-    (minPrice > 0 || maxPrice < PRICE_MAX ? 1 : 0) +
-    (guests ? 1 : 0) +
-    (duration !== "any" ? 1 : 0) +
-    (featuredOnly ? 1 : 0) +
-    (activeCategory !== "all" ? 1 : 0);
+  const categoryName = categories.find((c) => c.slug === activeCategory)?.name;
 
   const resetFilters = () => {
     setSearch("");
@@ -125,422 +119,275 @@ export default function Events() {
     setActiveCategory("all");
   };
 
-  const fmt = (n) => Number(n).toLocaleString("en-IN");
+  // Lage hue filters (removable chips + mobile badge dono isi se)
+  const chips = [
+    search && { label: `“${search}”`, onClear: () => setSearch("") },
+    activeCategory !== "all" && {
+      label: categoryName || activeCategory,
+      onClear: () => setActiveCategory("all"),
+    },
+    (minPrice > 0 || maxPrice < PRICE_MAX) && {
+      label: `₹${fmt(minPrice)} – ₹${fmt(maxPrice)}`,
+      onClear: () => {
+        setMinPrice(0);
+        setMaxPrice(PRICE_MAX);
+      },
+    },
+    guests && { label: `${guests} guests`, onClear: () => setGuests("") },
+    duration !== "any" && {
+      label: { short: "Up to 3 hrs", medium: "3 – 6 hrs", long: "6+ hrs" }[duration],
+      onClear: () => setDuration("any"),
+    },
+    featuredOnly && { label: "Featured", onClear: () => setFeaturedOnly(false) },
+  ].filter(Boolean);
+
+  const fill = (maxPrice / PRICE_MAX) * 100;
 
   return (
-  <>   <Navbar/>
- <section
-      className="relative bg-gray-900 w-full h-[70vh] min-h-[460px] max-h-[640px] overflow-hidden"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
-      {/* ---------- Background slides (crossfade + slow zoom) ---------- */}
-      {SLIDES.map((s, i) => (
-        <img
-          key={s.src}
-          src={s.src}
-          alt={s.alt}
-          loading={i === 0 ? "eager" : "lazy"}
-          className={`absolute inset-0 h-full w-full object-cover transition-all duration-[1400ms] ease-out motion-reduce:transition-none ${
-            i === active ? "opacity-100 scale-110" : "opacity-0 scale-100"
-          }`}
-          style={{
-            transitionProperty: "opacity, transform",
-            transitionDuration: i === active ? "1400ms, 7000ms" : "1400ms, 1400ms",
-          }}
-        />
-      ))}
- 
-      {/* ---------- Overlay: text ke peeche readable rakhne ke liye ---------- */}
-      <div className="absolute inset-0 bg-gradient-to-r from-gray-950/80 via-gray-950/50 to-gray-950/10" />
-      <div className="bottom-0 absolute inset-x-0 bg-gradient-to-t from-gray-950/60 to-transparent h-32" />
- 
-      {/* ---------- Content ---------- */}
-      <div className="relative flex items-center mx-auto px-4 max-w-7xl h-full">
-        <div className="max-w-xl text-white">
-          <h1 className="font-bold text-4xl sm:text-5xl lg:text-6xl leading-tight tracking-tight">
+    <div className="bg-stone-50 min-h-screen text-slate-800 ls-root">
+      <style>{listingStyles}</style>
+      <Navbar />
+
+      <ListingHero
+        slides={SLIDES}
+        title={
+          <>
             Har occasion ko
             <br />
             yaadgaar banayein
-          </h1>
- 
-          <p className="mt-5 max-w-md text-gray-200 text-base sm:text-lg">
-            Shaadi, birthday, corporate event ya party. Planning, decor aur
-            guests ka kaam hum sambhalte hain.
-          </p>
- 
-          <div className="flex flex-wrap gap-3 mt-8">
-            <a
-              href="#categories"
-              className="bg-indigo-600 hover:bg-indigo-500 shadow-indigo-900/30 shadow-lg px-6 py-3 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 font-semibold text-white text-sm transition"
-            >
-              Events dekhein
-            </a>
-            <a
-              href="#events"
-              className="bg-white/10 hover:bg-white/20 backdrop-blur px-6 py-3 border border-white/40 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-white font-semibold text-white text-sm transition"
-            >
-              Free quote lein
-            </a>
-          </div>
-        </div>
-      </div>
- 
-      {/* ---------- Thumbnails (click karke image badlo) ---------- */}
-      <div className="hidden right-4 md:right-8 bottom-5 absolute sm:flex gap-2">
-        {SLIDES.map((s, i) => (
-          <button
-            key={s.src}
-            onClick={() => setActive(i)}
-            aria-label={`Slide ${i + 1}`}
-            aria-current={i === active}
-            className={`relative h-14 w-20 overflow-hidden rounded-lg border-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${
-              i === active
-                ? "border-white"
-                : "border-transparent opacity-70 hover:opacity-100"
-            }`}
-          >
-            <img src={s.src} alt="" className="w-full h-full object-cover" />
-          </button>
-        ))}
-      </div>
- 
-      {/* ---------- Mobile dots ---------- */}
-      <div className="sm:hidden bottom-4 left-1/2 absolute flex gap-2 -translate-x-1/2">
-        {SLIDES.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setActive(i)}
-            aria-label={`Slide ${i + 1}`}
-            className={`h-2 rounded-full transition-all ${
-              i === active ? "w-6 bg-white" : "w-2 bg-white/50"
-            }`}
-          />
-        ))}
-      </div>
-    </section>
-    <div1 className="bg-gray-50 min-h-screen">
-    {/* ================= CATEGORIES SECTION ================= */}
-      <section className="mx-auto px-4 py-12 max-w-7xl">
-        <h2 className="mb-2 font-bold text-3xl text-center">Event Categories</h2>
-        <p className="mb-8 text-gray-500 text-center">
-          Apni occasion chuno, baaki hum sambhal lenge
-        </p>
+          </>
+        }
+        subtitle="Shaadi, birthday, corporate event ya party. Planning, decor aur guests ka kaam hum sambhalte hain."
+        search={search}
+        onSearch={setSearch}
+        placeholder="Event ka naam dhundho..."
+      />
 
-        {error && <p className="mb-4 text-red-500 text-center">{error}</p>}
-        {loadingCats && <p className="text-center">Loading...</p>}
+      {/* ================= CATEGORIES ================= */}
+      <section id="categories" className="mx-auto px-4 pt-14 max-w-7xl">
+        <h2 className="font-bold text-slate-900 text-3xl ls-display">Event categories</h2>
+        <p className="mt-1 text-slate-500">Apni occasion chuno, baaki hum sambhal lenge.</p>
 
-        <div className="gap-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setActiveCategory(cat.slug)}
-              className={`group text-left rounded-2xl overflow-hidden bg-white shadow-md hover:shadow-xl transition-all duration-300 border-2 ${
-                activeCategory === cat.slug
-                  ? "border-indigo-600"
-                  : "border-transparent"
-              }`}
-            >
-              <div className="bg-gray-200 h-32 overflow-hidden">
-                <img
-                  src={cat.image_url}
-                  alt={cat.name}
-                  onError={hideBrokenImage}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
+        <div className="flex flex-wrap gap-x-6 gap-y-6 mt-8">
+          {loadingCats &&
+            [...Array(6)].map((_, i) => (
+              <div key={i} className="flex flex-col items-center gap-2 animate-pulse">
+                <div className="bg-slate-200 rounded-full w-16 sm:w-20 h-16 sm:h-20" />
+                <div className="bg-slate-200 rounded w-14 h-3" />
               </div>
-              <div className="p-3">
-                <h3 className="font-semibold">{cat.name}</h3>
-                <p className="mt-1 text-gray-500 text-xs line-clamp-2">
-                  {cat.description}
-                </p>
-                {/* <p className="mt-2 font-medium text-indigo-600 text-sm">
-  From ₹{fmt(cat.starting_price)}
-</p> */}
-              </div>
-            </button>
-          ))}
+            ))}
+
+          {categories.map((cat) => {
+            const isActive = activeCategory === cat.slug;
+            return (
+              <button
+                key={cat.id}
+                // dobara click karne par category hat jaati hai
+                onClick={() => setActiveCategory(isActive ? "all" : cat.slug)}
+                aria-pressed={isActive}
+                className="group flex flex-col items-center gap-2.5 focus:outline-none w-20 sm:w-24"
+              >
+                <div
+                  className={`h-16 w-16 overflow-hidden rounded-full bg-slate-200 ring-2 ring-offset-2 ring-offset-stone-50 transition-all duration-300 group-focus-visible:ring-indigo-400 sm:h-20 sm:w-20 ${
+                    isActive ? "ring-indigo-600" : "ring-transparent group-hover:ring-indigo-300"
+                  }`}
+                >
+                  <img
+                    src={cat.image_url}
+                    alt={cat.name}
+                    onError={hideBrokenImage}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                </div>
+                <span
+                  className={`text-center text-xs font-semibold leading-tight transition-colors sm:text-sm ${
+                    isActive ? "text-indigo-600" : "text-slate-700 group-hover:text-indigo-600"
+                  }`}
+                >
+                  {cat.name}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </section>
 
-      {/* ================= FILTER SIDEBAR + EVENTS ================= */}
-      <section className="mx-auto px-4 pb-16 max-w-7xl">
-        {/* Mobile par Filters button */}
-        <button
-          onClick={() => setShowFilters((s) => !s)}
-          className="lg:hidden flex items-center gap-2 bg-white shadow mb-4 px-4 py-2 rounded-lg font-medium text-sm"
-        >
-          ⚙️ Filters
-          {activeFilters > 0 && (
-            <span className="bg-indigo-600 px-2 rounded-full text-white text-xs">
-              {activeFilters}
-            </span>
-          )}
-        </button>
+      {/* ================= FILTERS + EVENTS ================= */}
+      <section id="listing" className="mx-auto px-4 pt-14 pb-20 max-w-7xl scroll-mt-20">
+        <div className="flex lg:flex-row flex-col gap-8">
+          <FilterPanel activeCount={chips.length} onReset={resetFilters}>
+            <Field label="Search">
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Event ka naam..."
+                className={inputCls}
+              />
+            </Field>
 
-        <div className="flex lg:flex-row flex-col gap-6">
-          {/* ---------- FILTER SIDEBAR ---------- */}
-          <aside
-            className={`${
-              showFilters ? "block" : "hidden"
-            } lg:block lg:w-64 shrink-0`}
-          >
-            <div className="lg:top-20 lg:sticky space-y-6 bg-white shadow-md p-5 rounded-2xl">
-              <div className="flex justify-between items-center">
-                <h3 className="font-bold text-lg">Filters</h3>
-                <button
-                  onClick={resetFilters}
-                  className="text-indigo-600 text-sm hover:underline"
-                >
-                  Reset
-                </button>
-              </div>
+            <Field label="Sort by">
+              <select value={sort} onChange={(e) => setSort(e.target.value)} className={inputCls}>
+                <option value="default">Default</option>
+                <option value="low">Price: Low to High</option>
+                <option value="high">Price: High to Low</option>
+                <option value="name">Name (A-Z)</option>
+              </select>
+            </Field>
 
-              {/* Search */}
-              <div>
-                <label className="block mb-2 font-semibold text-sm">Search</label>
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Event ka naam..."
-                  className="px-3 py-2 border border-gray-300 focus:border-indigo-500 rounded-lg outline-none w-full text-sm"
-                />
-              </div>
+            <Field label="Category">
+              <select
+                value={activeCategory}
+                onChange={(e) => setActiveCategory(e.target.value)}
+                className={inputCls}
+              >
+                <option value="all">All categories</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.slug}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
 
-              {/* Sort */}
-              <div>
-                <label className="block mb-2 font-semibold text-sm">Sort by</label>
-                <select
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value)}
-                  className="bg-white px-3 py-2 border border-gray-300 focus:border-indigo-500 rounded-lg outline-none w-full text-sm"
-                >
-                  <option value="default">Default</option>
-                  <option value="low">Price: Low to High</option>
-                  <option value="high">Price: High to Low</option>
-                  <option value="name">Name (A-Z)</option>
-                </select>
-              </div>
-
-              {/* Category */}
-              <div>
-                <label className="block mb-2 font-semibold text-sm">Category</label>
-                <div className="space-y-2 pr-1 max-h-48 overflow-y-auto">
-                  <label className="flex items-center gap-2 text-sm cursor-pointer">
-                    <input
-                      type="radio"
-                      name="category"
-                      checked={activeCategory === "all"}
-                      onChange={() => setActiveCategory("all")}
-                      className="accent-indigo-600"
-                    />
-                    All
-                  </label>
-                  {categories.map((cat) => (
-                    <label
-                      key={cat.id}
-                      className="flex items-center gap-2 text-sm cursor-pointer"
-                    >
-                      <input
-                        type="radio"
-                        name="category"
-                        checked={activeCategory === cat.slug}
-                        onChange={() => setActiveCategory(cat.slug)}
-                        className="accent-indigo-600"
-                      />
-                      {cat.name}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Price range */}
-              <div>
-                <label className="block mb-2 font-semibold text-sm">
-                  Price Range
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min="0"
-                    value={minPrice}
-                    onChange={(e) => setMinPrice(Number(e.target.value))}
-                    className="px-2 py-2 border border-gray-300 focus:border-indigo-500 rounded-lg outline-none w-full text-sm"
-                    placeholder="Min"
-                  />
-                  <span className="text-gray-400">-</span>
-                  <input
-                    type="number"
-                    min="0"
-                    value={maxPrice}
-                    onChange={(e) => setMaxPrice(Number(e.target.value))}
-                    className="px-2 py-2 border border-gray-300 focus:border-indigo-500 rounded-lg outline-none w-full text-sm"
-                    placeholder="Max"
-                  />
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max={PRICE_MAX}
-                  step="5000"
-                  value={maxPrice}
-                  onChange={(e) => setMaxPrice(Number(e.target.value))}
-                  className="mt-3 w-full accent-indigo-600"
-                />
-                <p className="text-gray-500 text-xs">
-                  ₹{fmt(minPrice)} - ₹{fmt(maxPrice)}
-                </p>
-              </div>
-
-              {/* Guests */}
-              <div>
-                <label className="block mb-2 font-semibold text-sm">
-                  Kitne guests?
-                </label>
+            <Field label="Price range">
+              <div className="flex items-center gap-2">
                 <input
                   type="number"
-                  min="1"
-                  value={guests}
-                  onChange={(e) =>
-                    setGuests(e.target.value ? Number(e.target.value) : "")
-                  }
-                  placeholder="Jaise 100"
-                  className="px-3 py-2 border border-gray-300 focus:border-indigo-500 rounded-lg outline-none w-full text-sm"
+                  min="0"
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(Number(e.target.value))}
+                  placeholder="Min"
+                  className={inputCls}
                 />
-              </div>
-
-              {/* Duration */}
-              <div>
-                <label className="block mb-2 font-semibold text-sm">Duration</label>
-                <div className="space-y-2">
-                  {[
-                    ["any", "Any"],
-                    ["short", "Up to 3 hrs"],
-                    ["medium", "3 - 6 hrs"],
-                    ["long", "6+ hrs"],
-                  ].map(([val, label]) => (
-                    <label
-                      key={val}
-                      className="flex items-center gap-2 text-sm cursor-pointer"
-                    >
-                      <input
-                        type="radio"
-                        name="duration"
-                        checked={duration === val}
-                        onChange={() => setDuration(val)}
-                        className="accent-indigo-600"
-                      />
-                      {label}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Featured */}
-              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <span className="text-slate-300">–</span>
                 <input
-                  type="checkbox"
-                  checked={featuredOnly}
-                  onChange={(e) => setFeaturedOnly(e.target.checked)}
-                  className="accent-indigo-600"
+                  type="number"
+                  min="0"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(Number(e.target.value))}
+                  placeholder="Max"
+                  className={inputCls}
                 />
-                ⭐ Sirf Featured events
-              </label>
-            </div>
-          </aside>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max={PRICE_MAX}
+                step="5000"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(Number(e.target.value))}
+                aria-label="Maximum price"
+                className="mt-4 rounded-full w-full h-2 accent-indigo-600 appearance-none cursor-pointer"
+                style={{
+                  background: `linear-gradient(to right, #4f46e5 ${fill}%, #e2e8f0 ${fill}%)`,
+                }}
+              />
+              <p className="mt-2 text-slate-400 text-xs">
+                ₹{fmt(minPrice)} – ₹{fmt(maxPrice)}
+              </p>
+            </Field>
+
+            <Field label="Kitne guests?">
+              <input
+                type="number"
+                min="1"
+                value={guests}
+                onChange={(e) => setGuests(e.target.value ? Number(e.target.value) : "")}
+                placeholder="Jaise 100"
+                className={inputCls}
+              />
+            </Field>
+
+            <Field label="Duration">
+              <Segmented
+                value={duration}
+                onChange={setDuration}
+                options={[
+                  ["any", "Any"],
+                  ["short", "Up to 3 hrs"],
+                  ["medium", "3 – 6 hrs"],
+                  ["long", "6+ hrs"],
+                ]}
+              />
+            </Field>
+
+            <Toggle checked={featuredOnly} onChange={setFeaturedOnly}>
+              Sirf featured events
+            </Toggle>
+          </FilterPanel>
 
           {/* ---------- EVENTS ---------- */}
           <div className="flex-1 min-w-0">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="font-bold text-2xl">
-                {activeCategory === "all"
-                  ? "All Events"
-                  : categories.find((c) => c.slug === activeCategory)?.name}
-                <span className="ml-2 font-normal text-gray-500 text-base">
-                  ({filteredEvents.length})
-                </span>  
-              </h2>
+            <ResultsHeader
+              title={activeCategory === "all" ? "All events" : categoryName}
+              count={filteredEvents.length}
+              onShowAll={activeCategory !== "all" ? () => setActiveCategory("all") : undefined}
+            />
+            <ActiveChips chips={chips} />
 
-              {activeCategory !== "all" && (
-                <button
-                  onClick={() => setActiveCategory("all")}
-                  className="text-indigo-600 text-sm hover:underline"
-                >
-                  Show all events
-                </button>
-              )}
-            </div>
+            {error && (
+              <p className="bg-red-50 mb-4 px-4 py-3 rounded-xl text-red-600 text-sm">{error}</p>
+            )}
 
             {loadingEvents && (
-              <p className="py-10 text-center">Loading events...</p>
+              <div className="gap-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+                {[...Array(6)].map((_, i) => (
+                  <CardSkeleton key={i} />
+                ))}
+              </div>
             )}
 
             {!loadingEvents && filteredEvents.length === 0 && (
-              <p className="py-10 text-gray-500 text-center">
-                Koi event nahi mila. Filters change karke dekho.
-              </p>
+              <EmptyState text="Koi event nahi mila. Filters change karke dekho." onReset={resetFilters} />
             )}
 
-            <div className="gap-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-              {filteredEvents.map((ev) => (
-                <div
-                  key={ev.id}
-                  className="group bg-white shadow-md hover:shadow-xl rounded-2xl overflow-hidden transition-all duration-300"
-                >
-                  <div className="relative bg-gray-200 h-52 overflow-hidden">
-                    <img
-                      src={ev.image_url}
-                      alt={ev.title}
-                      onError={hideBrokenImage}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                    <span className="top-3 left-3 absolute bg-indigo-600 px-3 py-1 rounded-full text-white text-xs">
-                      {ev.category_name}
-                    </span>
-                    {ev.is_featured && (
-                      <span className="top-3 right-3 absolute bg-yellow-400 px-3 py-1 rounded-full font-medium text-xs">
-                        ⭐ Featured
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="p-4">
-                    <h3 className="font-semibold text-lg">{ev.title}</h3>
-                    <p className="mt-1 text-gray-600 text-sm">
-                      {ev.short_description}
-                    </p>
-
-                    <div className="flex justify-between mt-3 text-gray-500 text-sm">
-                      <span>
-                        👥 {ev.min_guests}-{ev.max_guests} guests
-                      </span>
-                      <span>⏱ {ev.duration_hours} hrs</span>
-                    </div>
-
-                    <div className="flex justify-between items-center mt-4">
-                      <div>
-                        <p className="font-bold text-indigo-600">
-                          ₹{fmt(ev.base_price)}
-                        </p>
-                        {ev.price_per_guest && (
-                          <p className="text-gray-400 text-xs">
-                            + ₹{fmt(ev.price_per_guest)}/guest
+            {!loadingEvents && (
+              <div className="gap-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+                {filteredEvents.map((ev, i) => (
+                  <ListingCard
+                    key={ev.id}
+                    index={i}
+                    to={`/Eventsid/${ev.id}`}
+                    image={ev.image_url}
+                    alt={ev.title}
+                    badge={ev.category_name}
+                    topRight={
+                      ev.is_featured && (
+                        <span className="inline-flex top-3 right-3 absolute items-center gap-1 bg-white/90 backdrop-blur px-3 py-1 rounded-full font-medium text-slate-800 text-xs">
+                          <Icon d={ICONS.star} className="fill-amber-400 w-3.5 h-3.5 text-amber-400" />
+                          Featured
+                        </span>
+                      )
+                    }
+                    title={ev.title}
+                    description={ev.short_description}
+                    meta={[
+                      { icon: ICONS.users, text: `${ev.min_guests}–${ev.max_guests} guests` },
+                      { icon: ICONS.clock, text: `${ev.duration_hours} hrs` },
+                    ]}
+                    footer={
+                      <div className="flex justify-between items-center gap-3">
+                        <div>
+                          <p className="font-extrabold text-slate-900 text-xl ls-display">
+                            ₹{fmt(ev.base_price)}
                           </p>
-                        )}
+                          {ev.price_per_guest && (
+                            <p className="text-slate-400 text-xs">+ ₹{fmt(ev.price_per_guest)} / guest</p>
+                          )}
+                        </div>
+                        <ViewButton to={`/Eventsid/${ev.id}`} />
                       </div>
-                      <button className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-white text-sm transition">
-                        View Details
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                    }
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>
-      <Footer/>
-    </div1></>
+
+      {/* <Footer /> */}
+    </div>
   );
 }
