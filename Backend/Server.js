@@ -4,10 +4,6 @@ const cors = require("cors");
 const { GoogleGenAI } = require("@google/genai");
 
 // ---------- DB (pool) ----------
-// IMPORTANT: Backend\routes\events.js ke top par dekho ki wahan database
-// kaise import ho raha hai, aur wahi yahan likho (bas "../" ki jagah "./").
-//   events.js mein:  const pool = require("../db");        -> yahan: require("./db")
-//   events.js mein:  const { pool } = require("../config/db"); -> yahan: const { pool } = require("./config/db")
 const pool = require("./db");
 
 // ---------- Routes ----------
@@ -16,7 +12,8 @@ const eventsRoute = require("./routes/events");
 const vendorsRoute = require("./routes/vendors");
 const venuesRoute = require("./routes/venues");
 const packagesRoute = require("./routes/packages");
-const guestRoutes = require("./routes/guestRoutes"); // file Backend\routes\ mein rakho
+const guestRoutes = require("./routes/Guestroutes"); // file ka naam bilkul yahi hona chahiye (capital G, chhota r)
+const solverRoutes = require("./routes/solverRoutes");
 
 const app = express();
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -31,7 +28,7 @@ Rules:
 - Categories: Venue, Catering, Decor, Photography, Entertainment, Miscellaneous
 `;
 
-// ---------- Middlewares ----------
+// ---------- Middlewares (SABSE PEHLE, kisi bhi route se pehle) ----------
 app.use(cors({ origin: "http://localhost:5173" })); // Vite frontend ka URL
 app.use(express.json());
 
@@ -41,7 +38,6 @@ app.post("/api/plan", async (req, res) => {
     const { eventType, budget, guests } = req.body;
 
     const response = await ai.models.generateContent({
-      // Model ka naam badalta rehta hai, isliye .env mein GEMINI_MODEL rakh sakte ho
       model: process.env.GEMINI_MODEL || "gemini-3.8-flash",
       contents: `Event: ${eventType}, Budget: ₹${budget}, Guests: ${guests}`,
       config: {
@@ -58,6 +54,7 @@ app.post("/api/plan", async (req, res) => {
 });
 
 // ---------- API routes ----------
+app.use("/api/solve", solverRoutes); // AI Event Problem Solver
 app.use("/api", guestRoutes(pool)); // guest list (/api/events/:eventId/guests, /api/guests/:id)
 app.use("/api/categories", categoriesRoute);
 app.use("/api/events", eventsRoute);
