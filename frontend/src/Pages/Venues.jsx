@@ -2,8 +2,24 @@ import { useEffect, useMemo, useState } from "react";
 import api from "../api";
 import Navbar from "../Components/Navbar";
 import Footer from "../Components/Footer";
-// import Hero from "../Components
-// /Hero";
+import {
+  ICONS,
+  fmt,
+  asArray,
+  listingStyles,
+  ListingHero,
+  ListingCard,
+  ViewButton,
+  IconLink,
+  FilterPanel,
+  Field,
+  inputCls,
+  ChipPicker,
+  ResultsHeader,
+  ActiveChips,
+  CardSkeleton,
+  EmptyState,
+} from "../Components/ListingKit";
 
 const SLIDES = [
   { src: "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=1600", alt: "Banquet hall" },
@@ -11,12 +27,6 @@ const SLIDES = [
   { src: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1600", alt: "Resort venue" },
   { src: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1600", alt: "Destination resort" },
 ];
-
-const hideBrokenImage = (e) => {
-  e.target.style.display = "none";
-};
-const fmt = (n) => Number(n).toLocaleString("en-IN");
-const asArray = (v) => (Array.isArray(v) ? v : []);
 
 export default function Venues() {
   // ---------- Data ----------
@@ -30,7 +40,6 @@ export default function Venues() {
   const [guests, setGuests] = useState("");
   const [selectedAmenities, setSelectedAmenities] = useState([]);
   const [sort, setSort] = useState("default");
-  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     api
@@ -44,7 +53,9 @@ export default function Venues() {
   const cities = useMemo(() => {
     const map = {};
     venues.forEach((v) => (map[v.city] = (map[v.city] || 0) + 1));
-    return Object.entries(map).sort((a, b) => a[0].localeCompare(b[0]));
+    return Object.entries(map)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([key, count]) => ({ key, label: key, count }));
   }, [venues]);
 
   const allAmenities = useMemo(
@@ -74,12 +85,6 @@ export default function Venues() {
     return list;
   }, [venues, search, city, guests, selectedAmenities, sort]);
 
-  const activeFilters =
-    (search ? 1 : 0) +
-    (city !== "all" ? 1 : 0) +
-    (guests ? 1 : 0) +
-    selectedAmenities.length;
-
   const resetFilters = () => {
     setSearch("");
     setCity("all");
@@ -88,225 +93,164 @@ export default function Venues() {
     setSort("default");
   };
 
+  const chips = [
+    search && { label: `“${search}”`, onClear: () => setSearch("") },
+    city !== "all" && { label: city, onClear: () => setCity("all") },
+    guests && { label: `${guests}+ guests`, onClear: () => setGuests("") },
+    ...selectedAmenities.map((a) => ({ label: a, onClear: () => toggleAmenity(a) })),
+  ].filter(Boolean);
+
   return (
-    <>
+    <div className="bg-stone-50 min-h-screen text-slate-800 ls-root">
+      <style>{listingStyles}</style>
       <Navbar />
 
-       
-       
-      <div className="bg-gray-50 max-h-screen">
-        {/* ================= CITY CHIPS ================= */}
-        <section className="mx-auto px-4 pt-12 max-w-7xl">
-            <br/>
-          <h2 className="mb-2 font-bold text-3xl text-center">Cities</h2>
-          <p className="mb-6 text-gray-500 text-center">Apni city ke venues dekho</p>
+      <ListingHero
+        slides={SLIDES}
+        title={
+          <>
+            Aapki occasion ka
+            <br />
+            perfect venue
+          </>
+        }
+        subtitle="Banquet hall, lawn ya resort. Capacity aur amenities dekh kar apni city ka venue chuno."
+        search={search}
+        onSearch={setSearch}
+        placeholder="Venue ya area ka naam dhundho..."
+      />
 
-          <div className="flex flex-wrap justify-center gap-2">
-            <button
-              onClick={() => setCity("all")}
-              className={`px-4 py-2 rounded-full text-sm font-medium border transition ${
-                city === "all"
-                  ? "bg-indigo-600 text-white border-indigo-600"
-                  : "bg-white text-gray-700 border-gray-200 hover:border-indigo-400"
-              }`}
-            >
-              All ({venues.length})
-            </button>
-            {cities.map(([name, count]) => (
-              <button
-                key={name}
-                onClick={() => setCity(name)}
-                className={`px-4 py-2 rounded-full text-sm font-medium border transition ${
-                  city === name
-                    ? "bg-indigo-600 text-white border-indigo-600"
-                    : "bg-white text-gray-700 border-gray-200 hover:border-indigo-400"
-                }`}
-              >
-                {name} ({count})
-              </button>
-            ))}
-          </div>
-        </section>
+      {/* ================= CITY CHIPS ================= */}
+      <section className="mx-auto px-4 pt-14 max-w-7xl">
+        <h2 className="font-bold text-slate-900 text-3xl ls-display">Cities</h2>
+        <p className="mt-1 mb-6 text-slate-500">Apni city ke venues dekho.</p>
+        <ChipPicker
+          items={cities}
+          value={city}
+          onChange={setCity}
+          total={venues.length}
+          limit={5}
+          placeholder="City dhundho..."
+        />
+      </section>
 
-        {/* ================= FILTERS + VENUES ================= */}
-        <section id="listing" className="mx-auto px-4 pt-10 pb-16 max-w-7xl scroll-mt-20">
-          <button
-            onClick={() => setShowFilters((s) => !s)}
-            className="lg:hidden flex items-center gap-2 bg-white shadow mb-4 px-4 py-2 rounded-lg font-medium text-sm"
-          >
-            ⚙️ Filters
-            {activeFilters > 0 && (
-              <span className="bg-indigo-600 px-2 rounded-full text-white text-xs">
-                {activeFilters}
-              </span>
+      {/* ================= FILTERS + VENUES ================= */}
+      <section id="listing" className="mx-auto px-4 pt-12 pb-20 max-w-7xl scroll-mt-20">
+        <div className="flex lg:flex-row flex-col gap-8">
+          <FilterPanel activeCount={chips.length} onReset={resetFilters}>
+            <Field label="Search">
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Venue ya area ka naam..."
+                className={inputCls}
+              />
+            </Field>
+
+            <Field label="Sort by">
+              <select value={sort} onChange={(e) => setSort(e.target.value)} className={inputCls}>
+                <option value="default">Default</option>
+                <option value="big">Capacity: High to Low</option>
+                <option value="small">Capacity: Low to High</option>
+                <option value="name">Name (A-Z)</option>
+              </select>
+            </Field>
+
+            <Field label="Kitne guests?">
+              <input
+                type="number"
+                min="1"
+                value={guests}
+                onChange={(e) => setGuests(e.target.value ? Number(e.target.value) : "")}
+                placeholder="Jaise 300"
+                className={inputCls}
+              />
+            </Field>
+
+            <Field label="Amenities">
+              <div className="space-y-1 pr-1 max-h-56 overflow-y-auto">
+                {allAmenities.map((a) => (
+                  <label
+                    key={a}
+                    className="flex items-center gap-2.5 hover:bg-stone-50 -mx-2 px-2 py-1.5 rounded-lg text-slate-700 text-sm transition-colors cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedAmenities.includes(a)}
+                      onChange={() => toggleAmenity(a)}
+                      className="w-4 h-4 accent-indigo-600"
+                    />
+                    {a}
+                  </label>
+                ))}
+              </div>
+            </Field>
+          </FilterPanel>
+
+          {/* ---------- VENUE CARDS ---------- */}
+          <div className="flex-1 min-w-0">
+            <ResultsHeader
+              title={city === "all" ? "All venues" : `Venues in ${city}`}
+              count={filtered.length}
+              onShowAll={city !== "all" ? () => setCity("all") : undefined}
+            />
+            <ActiveChips chips={chips} />
+
+            {error && (
+              <p className="bg-red-50 mb-4 px-4 py-3 rounded-xl text-red-600 text-sm">{error}</p>
             )}
-          </button>
 
-          <div className="flex lg:flex-row flex-col gap-6">
-            {/* ---------- SIDEBAR ---------- */}
-            <aside className={`${showFilters ? "block" : "hidden"} lg:block lg:w-64 shrink-0`}>
-              <div className="lg:top-20 lg:sticky space-y-6 bg-white shadow-md p-5 rounded-2xl">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-bold text-lg">Filters</h3>
-                  <button onClick={resetFilters} className="text-indigo-600 text-sm hover:underline">
-                    Reset
-                  </button>
-                </div>
-
-                <div>
-                  <label className="block mb-2 font-semibold text-sm">Search</label>
-                  <input
-                    type="text"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Venue ya area ka naam..."
-                    className="px-3 py-2 border border-gray-300 focus:border-indigo-500 rounded-lg outline-none w-full text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="block mb-2 font-semibold text-sm">Sort by</label>
-                  <select
-                    value={sort}
-                    onChange={(e) => setSort(e.target.value)}
-                    className="bg-white px-3 py-2 border border-gray-300 focus:border-indigo-500 rounded-lg outline-none w-full text-sm"
-                  >
-                    <option value="default">Default</option>
-                    <option value="big">Capacity: High to Low</option>
-                    <option value="small">Capacity: Low to High</option>
-                    <option value="name">Name (A-Z)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block mb-2 font-semibold text-sm">Kitne guests?</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={guests}
-                    onChange={(e) => setGuests(e.target.value ? Number(e.target.value) : "")}
-                    placeholder="Jaise 300"
-                    className="px-3 py-2 border border-gray-300 focus:border-indigo-500 rounded-lg outline-none w-full text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="block mb-2 font-semibold text-sm">Amenities</label>
-                  <div className="space-y-2 pr-1 max-h-56 overflow-y-auto">
-                    {allAmenities.map((a) => (
-                      <label key={a} className="flex items-center gap-2 text-sm cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={selectedAmenities.includes(a)}
-                          onChange={() => toggleAmenity(a)}
-                          className="accent-indigo-600"
-                        />
-                        {a}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </aside>
-
-            {/* ---------- VENUE CARDS ---------- */}
-            <div className="flex-1 min-w-0">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="font-bold text-2xl">
-                  {city === "all" ? "All Venues" : `Venues in ${city}`}
-                  <span className="ml-2 font-normal text-gray-500 text-base">
-                    ({filtered.length})
-                  </span>
-                </h2>
-                {city !== "all" && (
-                  <button
-                    onClick={() => setCity("all")}
-                    className="text-indigo-600 text-sm hover:underline"
-                  >
-                    Show all venues
-                  </button>
-                )}
-              </div>
-
-              {error && <p className="mb-4 text-red-500 text-center">{error}</p>}
-              {loading && <p className="py-10 text-center">Loading venues...</p>}
-              {!loading && !error && filtered.length === 0 && (
-                <p className="py-10 text-gray-500 text-center">
-                  Koi venue nahi mila. Filters change karke dekho.
-                </p>
-              )}
-
+            {loading && (
               <div className="gap-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-                {filtered.map((v) => {
-                  const amenities = asArray(v.amenities);
-                  return (
-                    <div
-                      key={v.id}
-                      className="group flex flex-col bg-white shadow-md hover:shadow-xl rounded-2xl overflow-hidden transition-all duration-300"
-                    >
-                      <div className="relative bg-gray-200 h-52 overflow-hidden">
-                        <img
-                          src={v.cover_image}
-                          alt={v.name}
-                          onError={hideBrokenImage}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                        <span className="top-3 left-3 absolute bg-indigo-600 px-3 py-1 rounded-full text-white text-xs">
-                          {v.city}
-                        </span>
-                      </div>
+                {[...Array(6)].map((_, i) => (
+                  <CardSkeleton key={i} />
+                ))}
+              </div>
+            )}
 
-                      <div className="flex flex-col flex-1 p-4">
-                        <h3 className="font-semibold text-lg">{v.name}</h3>
-                        <p className="mt-1 text-gray-500 text-xs">
-                          📍 {v.address}, {v.city}, {v.state} - {v.pincode}
-                        </p>
-                        <p className="mt-2 text-gray-600 text-sm line-clamp-2">
-                          {v.description}
-                        </p>
+            {!loading && !error && filtered.length === 0 && (
+              <EmptyState text="Koi venue nahi mila. Filters change karke dekho." onReset={resetFilters} />
+            )}
 
-                        <p className="mt-3 text-gray-500 text-sm">
-                          👥 Up to {fmt(v.capacity)} guests
-                        </p>
-
-                        <div className="flex flex-wrap gap-1.5 mt-3">
-                          {amenities.slice(0, 4).map((a) => (
-                            <span key={a} className="bg-gray-100 px-2 py-0.5 rounded-full text-gray-600 text-xs">
-                              {a}
-                            </span>
-                          ))}
-                          {amenities.length > 4 && (
-                            <span className="bg-gray-100 px-2 py-0.5 rounded-full text-gray-500 text-xs">
-                              +{amenities.length - 4}
-                            </span>
+            {!loading && (
+              <div className="gap-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+                {filtered.map((v, i) => (
+                  <ListingCard
+                    key={v.id}
+                    index={i}
+                    to={`/Venuesid/${v.id}`}
+                    image={v.cover_image}
+                    alt={v.name}
+                    badge={v.city}
+                    title={v.name}
+                    location={`${v.address}, ${v.city}, ${v.state} - ${v.pincode}`}
+                    description={v.description}
+                    meta={[{ icon: ICONS.users, text: `Up to ${fmt(v.capacity)} guests` }]}
+                    tags={asArray(v.amenities)}
+                    tagLimit={4}
+                    footer={
+                      <div className="flex justify-between items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          {v.contact_phone && (
+                            <IconLink href={`tel:${v.contact_phone}`} label="Call venue" icon={ICONS.phone} />
+                          )}
+                          {v.contact_email && (
+                            <IconLink href={`mailto:${v.contact_email}`} label="Email venue" icon={ICONS.mail} />
                           )}
                         </div>
-
-                        <div className="flex justify-between items-center mt-auto pt-4">
-                          <a
-                            href={`mailto:${v.contact_email}`}
-                            className="text-indigo-600 text-sm hover:underline"
-                          >
-                            Email karein
-                          </a>
-                          <a
-                            href={`tel:${v.contact_phone}`}
-                            className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-white text-sm transition"
-                          >
-                            Call now
-                          </a>
-                        </div>
+                        <ViewButton to={`/Venuesid/${v.id}`} />
                       </div>
-                    </div>
-                  );
-                })}
+                    }
+                  />
+                ))}
               </div>
-            </div>
+            )}
           </div>
-        </section>
+        </div>
+      </section>
 
-        <Footer />
-      </div>
-    </>
+      <Footer />
+    </div>
   );
 }
