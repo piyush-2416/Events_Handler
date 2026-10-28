@@ -18,10 +18,8 @@ router.get("/", async (req, res) => {
       WHERE e.is_active = TRUE`;
     const values = [];
 
-    // Sirf featured events
     if (featured === "true") query += " AND e.is_featured = TRUE";
 
-    // Category slug se filter (parameterized, SQL injection safe)
     if (category) {
       values.push(category);
       query += ` AND c.slug = $${values.length}`;
@@ -37,23 +35,35 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET /api/events/:slug
-// Ek event ki full detail (inclusions, exclusions, terms sab)
-router.get("/:slug", async (req, res) => {
+// GET /api/events/:idOrSlug
+// /api/events/5            -> id se
+// /api/events/royal-wedding -> slug se
+router.get("/:idOrSlug", async (req, res) => {
   try {
-    // view_count +1 karke row wapas lo
+    const param = req.params.idOrSlug;
+    const isId = /^\d{1,9}$/.test(param); // sirf number ho to id maano
+
+    const condition = isId ? "id = $1" : "slug = $1";
+    const value = isId ? Number(param) : param;
+
+    // view_count +1 karo aur category ka naam bhi saath lo
     const result = await pool.query(
-      `UPDATE events
-       SET view_count = COALESCE(view_count, 0) + 1
-       WHERE slug = $1 AND is_active = TRUE
-       RETURNING *`,
-      [req.params.slug]
+      `WITH updated AS (
+         UPDATE events
+         SET view_count = COALESCE(view_count, 0) + 1
+         WHERE ${condition} AND is_active = TRUE
+         RETURNING *
+       )
+       SELECT u.*, c.name AS category_name, c.slug AS category_slug
+       FROM updated u
+       JOIN event_categories c ON c.id = u.category_id`,
+      [value]
     );
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Event not found" });
     }
-    res.json(result.rows[0]); // inclusions/exclusions JS array ban ke aate hain
+    res.json(result.rows[0]);
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: "Server error" });
