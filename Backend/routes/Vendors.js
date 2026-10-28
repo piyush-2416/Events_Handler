@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const pool = require("../db"); // wahi eventDB ka pool, vendors table usi DB me hai
+const pool = require("../db");
 
 const COLUMNS = `id, name, slug, category, description, city, state,
   contact_person, contact_phone, contact_email,
@@ -8,7 +8,6 @@ const COLUMNS = `id, name, slug, category, description, city, state,
   services, cover_image, is_verified`;
 
 // GET /api/vendors
-// Optional filters:  ?category=Caterer   ?city=Noida   ?verified=true
 router.get("/", async (req, res) => {
   try {
     const { category, city, verified } = req.query;
@@ -36,13 +35,18 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET /api/vendors/:slug  -> ek vendor ki full detail
-router.get("/:slug", async (req, res) => {
+// GET /api/vendors/:idOrSlug (id ya slug dono chalenge)
+router.get("/:idOrSlug", async (req, res) => {
   try {
+    const { idOrSlug } = req.params;
+    const isNumeric = /^\d+$/.test(idOrSlug);
+
     const result = await pool.query(
-      "SELECT * FROM vendors WHERE slug = $1 AND is_active = TRUE",
-      [req.params.slug]
+      `SELECT * FROM vendors
+       WHERE ${isNumeric ? "id" : "slug"} = $1 AND is_active = TRUE`,
+      [isNumeric ? Number(idOrSlug) : idOrSlug]
     );
+
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Vendor not found" });
     }
