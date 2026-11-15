@@ -7,6 +7,7 @@ const { GoogleGenAI } = require("@google/genai");
 const pool = require("./db");
 
 // ---------- Routes ----------
+const authRoute = require("./routes/auth"); // NEW: signup / login
 const categoriesRoute = require("./routes/categories");
 const eventsRoute = require("./routes/events");
 const vendorsRoute = require("./routes/vendors");
@@ -54,6 +55,7 @@ app.post("/api/plan", async (req, res) => {
 });
 
 // ---------- API routes ----------
+app.use("/api/auth", authRoute); // NEW: /api/auth/signup, /login, /me
 app.use("/api/solve", solverRoutes); // AI Event Problem Solver
 app.use("/api", guestRoutes(pool)); // guest list (/api/events/:eventId/guests, /api/guests/:id)
 app.use("/api/categories", categoriesRoute);
