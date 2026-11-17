@@ -4,6 +4,7 @@ import Navbar from "../Components/Navbar";
 import ChatBot from "../Components/Chatbot";
 import Footer from "../Components/Footer";
 import Events from "./Events";
+import FeatureStudio from "../Components/Featurestudio";
 const features = [
   { title: "Verified Vendors", text: "Trusted & reviewed professionals", icon: "🛡️", bg: "bg-sky-50" },
   { title: "Wide Range of Events", text: "From weddings to corporate events", icon: "📅", bg: "bg-sky-100" },
@@ -278,48 +279,51 @@ function HeartButton() {
 }
 
 /* ---------- BROWSE BY CATEGORY ---------- */
-function BrowseByCategory() {
-  return (
-    <section className="px-4 py-10 sm:py-14">
-      <div className="mx-auto max-w-6xl">
-        <Reveal className="flex justify-between items-end gap-4">
-          <div className="flex items-start gap-3">
-            <span className="flex justify-center items-center bg-sky-100 rounded-xl w-10 h-10 text-xl">🗂️</span>
-            <div>
-              <h2 className="font-bold text-slate-900 text-xl sm:text-2xl">Browse by Category</h2>
-              <p className="text-slate-500 text-sm">Find events for every occasion</p>
-            </div>
-          </div>
-          <a href="#categories" className="group inline-flex items-center gap-1 font-semibold text-sky-700 hover:text-sky-900 text-sm shrink-0">
-            <span className="hidden sm:inline">View All Categories</span>
-            <span className="sm:hidden">View all</span>
-            <span className="transition-transform group-hover:translate-x-1">→</span>
-          </a>
-        </Reveal>
 
-        <div className="gap-3 sm:gap-4 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 mt-6">
-          {browseCategories.map((c, i) => (
-            <Reveal key={c.name} delay={i * 60}>
-              <a
-                href={`#${c.name.toLowerCase()}`}
-                className="group block relative bg-white shadow-sm hover:shadow-sky-200/60 hover:shadow-xl border border-sky-100 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 overflow-hidden transition hover:-translate-y-1.5 duration-300"
-              >
-                {!c.noHeart && <HeartButton />}
-                <div className={`flex h-24 items-center justify-center bg-gradient-to-br text-5xl ${c.grad}`}>
-                  <img className="transition-transform duration-500" src={c.image}></img>
-                </div>
-                <div className="p-3 text-center">
-                  <p className="font-semibold text-slate-900 text-sm">{c.name}</p>
-                  <p className="text-slate-500 text-xs">{c.count}</p>
-                </div>
-              </a>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
+
+<FeatureStudio/>
+// function BrowseByCategory() {
+//   return (
+//     <section className="px-4 py-10 sm:py-14">
+//       <div className="mx-auto max-w-6xl">
+//         <Reveal className="flex justify-between items-end gap-4">
+//           <div className="flex items-start gap-3">
+//             <span className="flex justify-center items-center bg-sky-100 rounded-xl w-10 h-10 text-xl">🗂️</span>
+//             <div>
+//               <h2 className="font-bold text-slate-900 text-xl sm:text-2xl">Browse by Category</h2>
+//               <p className="text-slate-500 text-sm">Find events for every occasion</p>
+//             </div>
+//           </div>
+//           <a href="#categories" className="group inline-flex items-center gap-1 font-semibold text-sky-700 hover:text-sky-900 text-sm shrink-0">
+//             <span className="hidden sm:inline">View All Categories</span>
+//             <span className="sm:hidden">View all</span>
+//             <span className="transition-transform group-hover:translate-x-1">→</span>
+//           </a>
+//         </Reveal>
+
+//         <div className="gap-3 sm:gap-4 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 mt-6">
+//           {browseCategories.map((c, i) => (
+//             <Reveal key={c.name} delay={i * 60}>
+//               <a
+//                 href={`#${c.name.toLowerCase()}`}
+//                 className="group block relative bg-white shadow-sm hover:shadow-sky-200/60 hover:shadow-xl border border-sky-100 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 overflow-hidden transition hover:-translate-y-1.5 duration-300"
+//               >
+//                 {!c.noHeart && <HeartButton />}
+//                 <div className={`flex h-24 items-center justify-center bg-gradient-to-br text-5xl ${c.grad}`}>
+//                   <img className="transition-transform duration-500" src={c.image}></img>
+//                 </div>
+//                 <div className="p-3 text-center">
+//                   <p className="font-semibold text-slate-900 text-sm">{c.name}</p>
+//                   <p className="text-slate-500 text-xs">{c.count}</p>
+//                 </div>
+//               </a>
+//             </Reveal>
+//           ))}
+//         </div>
+//       </div>
+//     </section>
+//   );
+// }
 
 /* ---------- TOP VENDORS ---------- */
 function TopVendors() {
@@ -685,13 +689,13 @@ export default function Home() {
         <div className="relative">
           <EventCategories />
           <WhyChoose />
-          <BrowseByCategory />
+         <FeatureStudio/>
           <TopVendors />
           {/* NEW: end mein add kiye gaye sections */}
           <PromoImages />
           <Testimonials />
           <ChatBot/>
-          <Events/>
+         
           <Footer/>
         </div>
       </main></>
