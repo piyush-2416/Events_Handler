@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { links } from "../data";
-import { Link } from "react-router-dom";
-import Budgetplanner from "../Pages/Budgetplanner";
-import Guestlist from "../Pages/Guestlist";
- const SIDEBAR_IMAGE = "/Birthday_Party_offer.png";
+import { getLinksForRole } from "../data";
+import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { getHomePath } from "../utils/roles";
 
 /* "🔍 Explore Events" -> icon "🔍" + text "Explore Events" (emoji na ho to 🏠 lagega) */
 const splitLabel = (label) => {
@@ -18,7 +17,15 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const sidebarRef = useRef(null);
   const toggleBtnRef = useRef(null);
-  const [active, setActive] = useState(links[0]?.label); // highlight hone wala link
+
+  const { user } = useAuth();
+  const { pathname } = useLocation();
+
+  // Role ke hisaab se links (guest / user / vendor / admin)
+  const allLinks = getLinksForRole(user?.role);
+
+  // Logo click par role ke hisaab se home (vendor -> dashboard)
+  const homePath = getHomePath(user?.role);
 
   // Band sidebar ke links Tab se focus na hon
   useEffect(() => {
@@ -84,10 +91,8 @@ export default function Navbar() {
             </button>
           </div>
 
-          {/* </div> */}
-
-          {/* Right side: notification bell + user icon */}
-          <div className="flex items-center gap-1">
+          {/* Right side: notification bell + profile / login */}
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               aria-label="Notifications"
               className="relative hover:bg-sky-100 p-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 text-slate-600"
@@ -109,24 +114,34 @@ export default function Navbar() {
               <span className="top-2 right-2 absolute bg-rose-500 rounded-full ring-2 ring-white w-2.5 h-2.5" />
             </button>
 
-            <button
-              aria-label="User profile"
-              className="hover:bg-sky-100 p-2 rounded-full focus:outline-none focus-visible:ring-2 text-slate-600"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                viewBox="0 0 24 24"
+            {user ? (
+              // Logged in: avatar circle, click karne par Profile page
+              <Link
+                to="/profile"
+                aria-label="Open profile"
+                className="flex items-center gap-3 hover:bg-sky-50 py-1 sm:pr-4 pl-1 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-                />
-              </svg>
-            </button>
+                <span className="flex justify-center items-center bg-sky-600 rounded-full w-9 h-9 font-semibold text-white text-sm">
+                  {user.name?.charAt(0).toUpperCase()}
+                </span>
+                <span className="hidden sm:flex flex-col leading-tight">
+                  <span className="font-medium text-slate-700 text-sm">
+                    {user.name}
+                  </span>
+                  <span className="text-sky-600 text-xs capitalize">
+                    {user.role}
+                  </span>
+                </span>
+              </Link>
+            ) : (
+              // Guest: sirf Login button
+              <Link
+                to="/login"
+                className="bg-sky-600 hover:bg-sky-700 px-5 py-2 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 font-medium text-white text-sm"
+              >
+                Login
+              </Link>
+            )}
           </div>
         </nav>
       </header>
@@ -165,7 +180,7 @@ export default function Navbar() {
 
           <div className="relative flex justify-between items-center">
             <span className="bg-white shadow-md px-2 py-1 rounded-xl">
-              <Link to="/">
+              <Link to={homePath} onClick={() => setOpen(false)}>
                 {" "}
                 <img
                   src="/Even_handler_Logo.png"
@@ -190,17 +205,21 @@ export default function Navbar() {
               </svg>
             </button>
           </div>
-          <p className="relative mt-3 font-semibold text-sm">Hi, Guest 👋</p>
+          <p className="relative mt-3 font-semibold text-sm truncate">
+            Hi, {user ? user.name : "Guest"} 👋
+          </p>
           <p className="relative text-sky-100 text-xs">
-            Let&apos;s plan something special
+            {user
+              ? `Logged in as ${user.role}`
+              : "Let's plan something special"}
           </p>
         </div>
 
         {/* Links: icon chip + text, sab start (left) se */}
-        {/* Links: icon chip + text, sab start (left) se */}
         <ul className="flex-1 space-y-1 px-3 py-3 overflow-y-auto">
-          {links.map((l, i) => {
-            const isActive = active === l.label;
+          {allLinks.map((l, i) => {
+            // Active link: current URL se pata chalta hai (case-insensitive)
+            const isActive = pathname.toLowerCase() === l.to.toLowerCase();
             const { icon, text } = splitLabel(l.label);
 
             return (
@@ -215,21 +234,18 @@ export default function Navbar() {
               >
                 <Link
                   to={l.to}
-                  onClick={() => {
-                    setActive(l.label);
-                    setOpen(false);
-                  }}
+                  onClick={() => setOpen(false)}
                   aria-current={isActive ? "page" : undefined}
                   className={`group flex items-center justify-start gap-3 rounded-xl px-2 py-2 text-left text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
                     isActive
-                      ? "bg-gradient-to-r from-white to-white-600    "
-                      : "  hover:bg-sky-50 hover:text-sky-700"
+                      ? "bg-sky-50 text-sky-700"
+                      : "hover:bg-sky-50 hover:text-sky-700"
                   }`}
                 >
                   <span
                     aria-hidden="true"
                     className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-base transition group-hover:scale-110 ${
-                      isActive ? "bg-white/20" : "bg-sky-50"
+                      isActive ? "bg-white" : "bg-sky-50"
                     }`}
                   >
                     {icon}
@@ -257,18 +273,29 @@ export default function Navbar() {
             );
           })}
         </ul>
-        {/* Neeche: event image card */}
-        <div className="bg-sky-50/60 p-3 border-sky-100 border-t shrink-0">
-          <a
+
+        {/* Neeche: guest ke liye Login + get started */}
+        <div className="space-y-3 bg-sky-50/60 p-3 border-sky-100 border-t shrink-0">
+          {!user && (
+            <Link
+              to="/login"
+              onClick={() => setOpen(false)}
+              className="block bg-sky-600 hover:bg-sky-700 px-4 py-2.5 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 font-medium text-white text-sm text-center"
+            >
+              Login
+            </Link>
+          )}
+
+          {/* <a
             href="#plan"
             onClick={() => setOpen(false)}
-            className="group/cta inline-flex items-center gap-1 mt-0.5 focus:outline-none font-semibold text-sky-700 hover:text-sky-900 text-xs text-left focus-visible:underline"
+            className="group/cta inline-flex items-center gap-1 focus:outline-none font-semibold text-sky-700 hover:text-sky-900 text-xs text-left focus-visible:underline"
           >
             Get started
             <span className="transition-transform group-hover/cta:translate-x-1">
               →
             </span>
-          </a>
+          </a> */}
         </div>
       </aside>
     </>
