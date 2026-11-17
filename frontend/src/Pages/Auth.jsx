@@ -1,11 +1,12 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import api from "../api";
+import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { getHomePath } from "../utils/roles";
 
-/* ---------- apne backend / routes ke hisaab se yahan badal sakte ho ---------- */
-const ENDPOINTS = { login: "/auth/login", signup: "/auth/register" };
-const AFTER_AUTH_PATH = "/"; // login ke baad kahan bhejna hai
-const FORGOT_PATH = "/forgot-password";
+/* ---------- apne routes ke hisaab se yahan badal sakte ho ---------- */
+const LOGIN_PATH = "/login";
+const SIGNUP_PATH = "/signup";
+const PROFILE_PATH = "/profile";
+const LOGO_SRC = "/Even_handler_Logo.png"; // Navbar wala hi logo
 const FOOTER_LINKS = [
   ["Home", "/"],
   ["Features", "#features"],
@@ -31,12 +32,12 @@ const Icon = ({ d, className = "w-5 h-5", strokeWidth = 1.7 }) => (
   </svg>
 );
 const ICONS = {
-  mail: "M4 6h16v12H4zM4 7l8 6 8-6",
   lock: "M6 11h12v9H6zM8 11V8a4 4 0 118 0v3",
   user: "M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0",
-  eye: "M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 15a3 3 0 100-6 3 3 0 000 6z",
-  eyeOff:
-    "M3 3l18 18M10.6 6.2A9.8 9.8 0 0112 6c6.5 0 10 6 10 6a17 17 0 01-3.2 3.9M6.6 6.7A17 17 0 002 12s3.5 6 10 6c1.6 0 3-.3 4.3-.9M9.9 9.9a3 3 0 004.2 4.2",
+  userPlus:
+    "M10 12a4 4 0 100-8 4 4 0 000 8zM2.5 21a7.5 7.5 0 0115 0M19 8v6M16 11h6",
+  home: "M3 11l9-8 9 8M5 9.5V21h14V9.5M10 21v-6h4v6",
+  check: "M5 12.5l4.5 4.5L19 7.5",
   sparkle:
     "M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3zM19 16l.7 2.3L22 19l-2.3.7L19 22l-.7-2.3L16 19l2.3-.7L19 16z",
   bolt: "M13 2L4 14h7l-1 8 9-12h-7l1-8z",
@@ -55,8 +56,6 @@ const ICONS = {
   box: "M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3zM12 12l8-4.5M12 12v9M12 12L4 7.5",
   calendar: "M4 6h16v14H4zM4 10h16M8 3v4M16 3v4M8 14h.01M12 14h.01M16 14h.01",
   arrow: "M5 12h14M13 6l6 6-6 6",
-  alert: "M12 4l9 16H3L12 4zM12 10v4M12 17.5v.01",
-  check: "M5 12.5l4.5 4.5L19 7.5",
   instagram:
     "M7 3h10a4 4 0 014 4v10a4 4 0 01-4 4H7a4 4 0 01-4-4V7a4 4 0 014-4zM12 16a4 4 0 100-8 4 4 0 000 8zM17.5 6.5h.01",
   facebook: "M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z",
@@ -66,26 +65,22 @@ const ICONS = {
     "M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2zM4 6a2 2 0 100-4 2 2 0 000 4z",
 };
 
-const GoogleLogo = () => (
-  <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
-    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" />
-    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
-    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-  </svg>
-);
-const GithubLogo = () => (
-  <svg viewBox="0 0 24 24" className="w-5 h-5 text-slate-900" fill="currentColor" aria-hidden="true">
-    <path d="M12 .5a11.5 11.5 0 00-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 015.78 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0012 .5z" />
-  </svg>
-);
-
 /* ---------- content ---------- */
 const HERO_POINTS = [
   { icon: ICONS.bolt, lines: ["Smart", "Planning"] },
   { icon: ICONS.users, lines: ["Easy", "Collaboration"] },
   { icon: ICONS.shield, lines: ["Stress Free", "Events"] },
 ];
+
+// Welcome card ke neeche chhote benefit chips
+const CARD_PERKS = ["Free account", "AI planning tools", "Customer & Vendor"];
+
+// Logged-in user ke liye: role ke hisaab se pehle button ka label
+const HOME_LABEL = {
+  user: { title: "Go to Home", desc: "Events, vendors aur venues explore karo" },
+  vendor: { title: "Go to Dashboard", desc: "Apni bookings aur services dekho" },
+  admin: { title: "Go to Admin Panel", desc: "Users aur app manage karo" },
+};
 
 const AI_FEATURES = [
   { icon: ICONS.sparkle, title: "AI Problem Solver", text: "Get instant solutions to your event-related doubts and challenges.", tile: "bg-indigo-100 text-indigo-600" },
@@ -106,7 +101,7 @@ const MORE_FEATURES = [
   { icon: ICONS.users, title: "Collaboration", text: "Work with your team, family and vendors in real-time.", card: "from-teal-50", tile: "bg-teal-100 text-teal-600" },
 ];
 
-/* ---------- styles: halki entrance + hover ---------- */
+/* ---------- styles: halki entrance animation ---------- */
 const styles = `
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
@@ -114,16 +109,14 @@ const styles = `
 
 @keyframes au-zoom { from { transform: scale(1.08); } to { transform: scale(1); } }
 @keyframes au-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
-@keyframes au-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
 .au-img  { animation: au-zoom 1.6s cubic-bezier(.2,.7,.2,1) both; }
 .au-in-1 { animation: au-rise .7s .1s  cubic-bezier(.2,.7,.2,1) both; }
 .au-in-2 { animation: au-rise .7s .22s cubic-bezier(.2,.7,.2,1) both; }
 .au-in-3 { animation: au-rise .7s .34s cubic-bezier(.2,.7,.2,1) both; }
-.au-swap { animation: au-fade .3s ease-out both; }
 
 @media (prefers-reduced-motion: reduce) {
-  .au-img, .au-in-1, .au-in-2, .au-in-3, .au-swap { animation: none; }
+  .au-img, .au-in-1, .au-in-2, .au-in-3 { animation: none; }
 }
 `;
 
@@ -137,124 +130,19 @@ const Pill = ({ children, icon, className = "" }) => (
   </span>
 );
 
-function Input({ icon, type = "text", value, onChange, placeholder, autoComplete, minLength }) {
-  const [show, setShow] = useState(false);
-  const isPassword = type === "password";
-  return (
-    <div className="relative">
-      <Icon d={icon} className="top-1/2 left-3.5 absolute w-[18px] h-[18px] text-slate-400 -translate-y-1/2" />
-      <input
-        type={isPassword && show ? "text" : type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        aria-label={placeholder}
-        autoComplete={autoComplete}
-        minLength={minLength}
-        required
-        className="bg-white pr-11 pl-11 border border-slate-200 focus:border-emerald-600 rounded-lg outline-none focus:ring-2 focus:ring-emerald-600/20 w-full h-12 text-slate-800 placeholder:text-slate-400 text-sm transition"
-      />
-      {isPassword && (
-        <button
-          type="button"
-          onClick={() => setShow((s) => !s)}
-          aria-label={show ? "Password chhupao" : "Password dikhao"}
-          className="top-1/2 right-3.5 absolute text-slate-500 hover:text-emerald-700 transition-colors -translate-y-1/2"
-        >
-          <Icon d={show ? ICONS.eyeOff : ICONS.eye} className="w-[18px] h-[18px]" />
-        </button>
-      )}
-    </div>
-  );
-}
-
 export default function Auth() {
-  const navigate = useNavigate();
-  const [mode, setMode] = useState("login"); // login | signup
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState(() => {
-    try {
-      return localStorage.getItem("remembered_email") || "";
-    } catch {
-      return "";
-    }
-  });
-  const [remember, setRemember] = useState(() => {
-    try {
-      return !!localStorage.getItem("remembered_email");
-    } catch {
-      return false;
-    }
-  });
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
+  const { user, loading } = useAuth();
 
-  const isLogin = mode === "login";
-
-  const switchMode = (m) => {
-    setMode(m);
-    setError("");
-    setNotice("");
-  };
-
-  const goSignup = () => {
-    switchMode("signup");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const socialLogin = (provider) => {
-    // backend par /auth/google aur /auth/github routes hone chahiye
-    const base = (api.defaults?.baseURL || "").replace(/\/$/, "");
-    window.location.href = `${base}/auth/${provider}`;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setNotice("");
-    setLoading(true);
-
-    try {
-      const payload = isLogin ? { email, password } : { name, email, password };
-      const res = await api.post(isLogin ? ENDPOINTS.login : ENDPOINTS.signup, payload);
-
-      let data = res.data;
-      if (data && data.data) data = data.data;
-
-      if (data?.token) {
-        localStorage.setItem("token", data.token);
-        if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
-        // "Remember me": sirf email yaad rakhta hai taaki agli baar prefill ho
-        if (remember) localStorage.setItem("remembered_email", email);
-        else localStorage.removeItem("remembered_email");
-        navigate(AFTER_AUTH_PATH);
-      } else if (!isLogin) {
-        // signup ho gaya par token nahi mila, to login par bhej do
-        setMode("login");
-        setPassword("");
-        setNotice("Account ban gaya. Ab login karo.");
-      } else {
-        throw new Error("Login response me token nahi mila");
-      }
-    } catch (err) {
-      console.error("Auth error:", err.response?.status, err.response?.data || err);
-      setError(
-        err.response?.data?.message ||
-          err.response?.data?.error ||
-          (err.response?.status === 401 ? "Email ya password galat hai" : "Kuch gadbad hui, dobara try karo")
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Page sabko dikhta hai. Bas card ke buttons login state ke hisaab se badalte hain.
+  const loggedIn = !loading && !!user;
+  const firstName = user?.name?.split(" ")[0] || "";
+  const homeInfo = HOME_LABEL[user?.role] || HOME_LABEL.user;
 
   return (
     <div className="bg-white min-h-screen text-slate-800 au-root">
       <style>{styles}</style>
 
-      {/* ================= HERO + FORM ================= */}
+      {/* ================= HERO + WELCOME CARD ================= */}
       <section className="relative bg-slate-900 overflow-hidden">
         <img
           src={HERO_IMAGE}
@@ -299,142 +187,159 @@ export default function Auth() {
             </div>
           </div>
 
-          {/* ---------- right: auth card ---------- */}
+          {/* ---------- right: Welcome card ---------- */}
           <div className="lg:justify-self-end w-full max-w-md au-in-2">
-            <div className="bg-white shadow-2xl shadow-slate-950/30 rounded-2xl overflow-hidden">
-              {/* tabs */}
-              <div role="tablist" className="flex mx-7 mt-7 border-slate-200 border-b">
-                {[
-                  ["login", "Login"],
-                  ["signup", "Sign Up"],
-                ].map(([val, label]) => (
-                  <button
-                    key={val}
-                    role="tab"
-                    aria-selected={mode === val}
-                    onClick={() => switchMode(val)}
-                    className={`-mb-px flex-1 border-b-2 pb-3 text-[15px] font-semibold transition-colors ${
-                      mode === val
-                        ? "border-emerald-700 text-emerald-700"
-                        : "border-transparent text-slate-500 hover:text-slate-800"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
+            <div className="bg-white shadow-2xl shadow-slate-950/40 rounded-3xl overflow-hidden">
+              {/* Upar: gradient header + logo + welcome text */}
+              <div className="relative bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-600 px-8 pt-8 pb-16 overflow-hidden text-white">
+                {/* sajawat ke circles */}
+                <span
+                  aria-hidden="true"
+                  className="-top-10 -right-10 absolute bg-white/10 rounded-full w-40 h-40 pointer-events-none"
+                />
+                <span
+                  aria-hidden="true"
+                  className="-bottom-12 left-10 absolute bg-emerald-300/20 rounded-full w-32 h-32 pointer-events-none"
+                />
+
+                <div className="relative">
+                  <span className="inline-flex items-center bg-white shadow-md px-3 py-2 rounded-xl">
+                    <img
+                      src={LOGO_SRC}
+                      alt="EventHandler logo"
+                      onError={(e) => (e.target.style.display = "none")}
+                      className="w-auto h-9 object-contain"
+                    />
+                  </span>
+
+                  {loggedIn ? (
+                    <>
+                      <h2 className="mt-6 font-bold text-2xl sm:text-3xl leading-tight">
+                        Welcome back,
+                        <br />
+                        <span className="break-words">{firstName} 👋</span>
+                      </h2>
+                      <p className="mt-3 max-w-xs text-emerald-50/90 text-sm leading-relaxed">
+                        Aap login ho. Neeche se seedha apne page par jao.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <h2 className="mt-6 font-bold text-2xl sm:text-3xl leading-tight">
+                        Welcome to
+                        <br />
+                        EventHandler
+                      </h2>
+                      <p className="mt-3 max-w-xs text-emerald-50/90 text-sm leading-relaxed">
+                        Apna account kholo ya naya banao aur apna event plan karna shuru karo.
+                      </p>
+                    </>
+                  )}
+                </div>
               </div>
 
-              <div key={mode} className="p-7 pt-6 au-swap">
-                {notice && (
-                  <p className="flex items-center gap-2 bg-emerald-50 mb-4 px-4 py-3 rounded-lg text-emerald-700 text-sm">
-                    <Icon d={ICONS.check} className="flex-shrink-0 w-4 h-4" /> {notice}
-                  </p>
-                )}
-                {error && (
-                  <p
-                    role="alert"
-                    className="flex items-start gap-2 bg-red-50 mb-4 px-4 py-3 rounded-lg text-red-600 text-sm"
-                  >
-                    <Icon d={ICONS.alert} className="flex-shrink-0 mt-0.5 w-4 h-4" /> {error}
-                  </p>
-                )}
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  {!isLogin && (
-                    <Input
-                      icon={ICONS.user}
-                      value={name}
-                      onChange={setName}
-                      placeholder="Full name"
-                      autoComplete="name"
-                    />
-                  )}
-                  <Input
-                    icon={ICONS.mail}
-                    type="email"
-                    value={email}
-                    onChange={setEmail}
-                    placeholder="Email address"
-                    autoComplete="email"
-                  />
-                  <Input
-                    icon={ICONS.lock}
-                    type="password"
-                    value={password}
-                    onChange={setPassword}
-                    placeholder="Password"
-                    autoComplete={isLogin ? "current-password" : "new-password"}
-                    minLength={6}
-                  />
-
-                  {isLogin && (
-                    <div className="flex justify-between items-center text-sm">
-                      <label className="flex items-center gap-2 text-slate-600 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={remember}
-                          onChange={(e) => setRemember(e.target.checked)}
-                          className="border-slate-300 rounded w-4 h-4 accent-emerald-700"
+              {/* Neeche: action card (header ke upar thoda overlap karta hai) */}
+              <div className="relative -mt-8 px-5 sm:px-7 pb-8">
+                <div className="space-y-3 bg-white shadow-slate-900/10 shadow-xl p-3 rounded-2xl ring-1 ring-slate-100">
+                  {loggedIn ? (
+                    <>
+                      {/* Logged in: Home / Dashboard row */}
+                      <Link
+                        to={getHomePath(user.role)}
+                        className="group flex items-center gap-4 bg-emerald-700 hover:bg-emerald-800 shadow-emerald-900/20 shadow-md px-4 py-4 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 text-white transition-colors"
+                      >
+                        <span className="flex flex-shrink-0 justify-center items-center bg-white/15 rounded-lg w-12 h-12">
+                          <Icon d={ICONS.home} className="w-6 h-6" />
+                        </span>
+                        <span className="flex-1 min-w-0 text-left">
+                          <span className="block font-semibold text-base">{homeInfo.title}</span>
+                          <span className="block mt-0.5 text-emerald-100 text-xs">{homeInfo.desc}</span>
+                        </span>
+                        <Icon
+                          d={ICONS.arrow}
+                          className="flex-shrink-0 w-5 h-5 transition-transform group-hover:translate-x-1"
                         />
-                        Remember me
-                      </label>
-                      <Link to={FORGOT_PATH} className="font-medium text-emerald-700 hover:underline">
-                        Forgot password?
                       </Link>
-                    </div>
+
+                      {/* Logged in: Profile row */}
+                      <Link
+                        to={PROFILE_PATH}
+                        className="group flex items-center gap-4 bg-white hover:bg-emerald-50 px-4 py-4 border-2 border-emerald-700 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 text-emerald-900 transition-colors"
+                      >
+                        <span className="flex flex-shrink-0 justify-center items-center bg-emerald-100 rounded-lg w-12 h-12 text-emerald-700">
+                          <Icon d={ICONS.user} className="w-6 h-6" />
+                        </span>
+                        <span className="flex-1 min-w-0 text-left">
+                          <span className="block font-semibold text-base">My Profile</span>
+                          <span className="block mt-0.5 text-slate-500 text-xs">
+                            Apni details dekho ya logout karo
+                          </span>
+                        </span>
+                        <Icon
+                          d={ICONS.arrow}
+                          className="flex-shrink-0 w-5 h-5 text-emerald-700 transition-transform group-hover:translate-x-1"
+                        />
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      {/* Guest: Login row */}
+                      <Link
+                        to={LOGIN_PATH}
+                        className="group flex items-center gap-4 bg-emerald-700 hover:bg-emerald-800 shadow-emerald-900/20 shadow-md px-4 py-4 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 text-white transition-colors"
+                      >
+                        <span className="flex flex-shrink-0 justify-center items-center bg-white/15 rounded-lg w-12 h-12">
+                          <Icon d={ICONS.lock} className="w-6 h-6" />
+                        </span>
+                        <span className="flex-1 min-w-0 text-left">
+                          <span className="block font-semibold text-base">Login</span>
+                          <span className="block mt-0.5 text-emerald-100 text-xs">
+                            Apne account me wapas aao
+                          </span>
+                        </span>
+                        <Icon
+                          d={ICONS.arrow}
+                          className="flex-shrink-0 w-5 h-5 transition-transform group-hover:translate-x-1"
+                        />
+                      </Link>
+
+                      {/* Guest: Sign up row */}
+                      <Link
+                        to={SIGNUP_PATH}
+                        className="group flex items-center gap-4 bg-white hover:bg-emerald-50 px-4 py-4 border-2 border-emerald-700 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 text-emerald-900 transition-colors"
+                      >
+                        <span className="flex flex-shrink-0 justify-center items-center bg-emerald-100 rounded-lg w-12 h-12 text-emerald-700">
+                          <Icon d={ICONS.userPlus} className="w-6 h-6" />
+                        </span>
+                        <span className="flex-1 min-w-0 text-left">
+                          <span className="block font-semibold text-base">Sign up</span>
+                          <span className="block mt-0.5 text-slate-500 text-xs">
+                            Naya account banao, bilkul free
+                          </span>
+                        </span>
+                        <Icon
+                          d={ICONS.arrow}
+                          className="flex-shrink-0 w-5 h-5 text-emerald-700 transition-transform group-hover:translate-x-1"
+                        />
+                      </Link>
+                    </>
                   )}
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="flex justify-center items-center gap-2 bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 disabled:opacity-60 shadow-emerald-900/20 hover:shadow-lg rounded-lg w-full h-12 font-semibold text-white text-sm transition-all disabled:cursor-not-allowed"
-                  >
-                    {loading ? (
-                      <>
-                        <span className="border-2 border-white/40 border-t-white rounded-full w-4 h-4 animate-spin" />
-                        Please wait...
-                      </>
-                    ) : isLogin ? (
-                      "Login"
-                    ) : (
-                      "Create account"
-                    )}
-                  </button>
-                </form>
-
-                {/* OR */}
-                <div className="flex items-center gap-4 my-5 text-slate-500 text-xs">
-                  <span className="flex-1 bg-slate-200 h-px" />
-                  OR
-                  <span className="flex-1 bg-slate-200 h-px" />
                 </div>
 
-                <div className="space-y-3">
-                  <button
-                    type="button"
-                    onClick={() => socialLogin("google")}
-                    className="flex justify-center items-center gap-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg w-full h-12 font-medium text-slate-700 text-sm transition-colors"
-                  >
-                    <GoogleLogo /> Continue with Google
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => socialLogin("github")}
-                    className="flex justify-center items-center gap-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg w-full h-12 font-medium text-slate-700 text-sm transition-colors"
-                  >
-                    <GithubLogo /> Continue with GitHub
-                  </button>
-                </div>
-
-                <p className="mt-6 text-slate-600 text-sm text-center">
-                  {isLogin ? "Don’t have an account?" : "Already have an account?"}{" "}
-                  <button
-                    onClick={() => switchMode(isLogin ? "signup" : "login")}
-                    className="font-semibold text-emerald-700 hover:underline"
-                  >
-                    {isLogin ? "Sign Up" : "Login"}
-                  </button>
-                </p>
+                {/* Benefit chips */}
+                <ul className="flex flex-wrap justify-center gap-x-5 gap-y-2 mt-6">
+                  {CARD_PERKS.map((perk) => (
+                    <li
+                      key={perk}
+                      className="flex items-center gap-1.5 text-slate-500 text-xs"
+                    >
+                      <span className="flex justify-center items-center bg-emerald-100 rounded-full w-4 h-4 text-emerald-700">
+                        <Icon d={ICONS.check} className="w-3 h-3" strokeWidth={2.4} />
+                      </span>
+                      {perk}
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
           </div>
@@ -510,13 +415,13 @@ export default function Auth() {
               Join EventHandler today and turn your ideas into unforgettable moments with the help of AI.
             </p>
           </div>
-          <button
-            onClick={goSignup}
+          <Link
+            to={loggedIn ? getHomePath(user.role) : SIGNUP_PATH}
             className="group inline-flex justify-center items-center gap-2 bg-emerald-300 hover:bg-emerald-200 px-6 py-3 rounded-lg font-semibold text-emerald-950 text-sm whitespace-nowrap transition-colors"
           >
-            Get Started for Free
+            {loggedIn ? "Continue Planning" : "Get Started for Free"}
             <Icon d={ICONS.arrow} className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-          </button>
+          </Link>
         </div>
       </section>
 
