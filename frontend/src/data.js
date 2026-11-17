@@ -1,20 +1,79 @@
 /* Shared data: Navbar, Footer aur Home teeno isse use karte hain */
 
-export const links = [
-  { label: "📊DashBoard", href: "#home" },
-  { label: "🔍 Explore Events", to: "/events" },
-  { label: "🏢 Vendors", to: "/Vendors", href: "#about" },
-  { label: "🎪Venues", to: "/Venues", href: "#Venues" },
-  { label: "📦 Packages ",to:"/packages", href: "#contact" },
-  { label: "Budget Planner  ",to:"/Budgetplanner", href: "#contact" },
-  { label: "📅Guest-List", to:"/guestlist/:eventId",href: "#products" },
-  { label: "📅 My Events", href: "#products" },
-  { label: "🎟️ Bookings", href: "#services" },
-  { label: "❤️ Wishlist", href: "#contact" },
+/* ---------- Role ke hisaab se sidebar links ---------- */
 
-  { label: "💬 Reviews & Feedback", href: "#contact" },
-  { label: "👤 My Profile ", href: "#contact" },
+// Login nahi hai (guest): sirf browse karne wale pages
+const guestLinks = [
+  { label: "🏠 Home", to: "/" },
+  { label: "🔍 Explore Events", to: "/events" },
+  { label: "🏛️ Venues", to: "/Venues" },
+  { label: "🤝 Vendors", to: "/Vendors" },
+  { label: "📦 Packages", to: "/packages" },
 ];
+
+// Customer: browse + planning tools + bookings
+const customerLinks = [
+  // 🏠 Dashboard
+  { label: "🏠 Home", to: "/" },
+
+  // 🔍 Explore
+  { label: "🔍 Explore Events", to: "/events" },
+  { label: "🏛️ Venues", to: "/Venues" },
+  { label: "🤝 Vendors", to: "/Vendors" },
+  { label: "📦 Packages", to: "/packages" },
+
+  // 📝 Event Planning Tools
+  { label: "💰 Budget Planner", to: "/Budgetplanner" },
+  { label: "💌 Create Invitation", to: "/create-invitation" },
+  // Guest list har event ki alag hoti hai, isliye pehle event chuno (/guestlist/:eventId)
+  { label: "👥 Guest List", to: "/Guestlist" },
+  { label: "🤖 AI Problem Solver", to: "/solver" },
+  // { label: "✨ AI Feature Studio", to: "/Featurestudio" },
+
+  // 📋 Event Management
+  // { label: "🎉 My Events", to: "/my-events" },
+  { label: "🎟️ My Bookings", to: "/MyBookings" },
+  { label: "❤️ Wishlist", to: "/wishlist" },
+
+  // 👤 Account & Feedback
+  { label: "⭐ Reviews & Feedback", to: "/Feedback" },
+  { label: "👤 My Profile", to: "/profile" },
+];
+
+// Vendor: Home/Events/Vendors/Packages nahi, sirf apna kaam
+const vendorLinks = [
+  { label: "📊 Dashboard", to: "/vendor-dashboard" },
+  { label: "🤖 AI Problem Solver", to: "/solver" },
+  // { label: "✨ AI Feature Studio", to: "/Featurestudio" },
+  { label: "🎟️ My Bookings", to: "/MyBookings" },
+  { label: "⭐ Reviews & Feedback", to: "/reviews" },
+  { label: "👤 My Profile", to: "/profile" },
+];
+
+// Admin: admin panel + browsing
+const adminLinks = [
+  { label: "🛠️ Admin Panel", to: "/admin" },
+  { label: "📊 Vendor Dashboard", to: "/vendor-dashboard" },
+  { label: "🏠 Home", to: "/" },
+  { label: "🔍 Explore Events", to: "/events" },
+  { label: "🏛️ Venues", to: "/Venues" },
+  { label: "🤝 Vendors", to: "/Vendors" },
+  { label: "📦 Packages", to: "/packages" },
+  { label: "🤖 AI Problem Solver", to: "/solver" },
+  { label: "👤 My Profile", to: "/profile" },
+];
+
+const LINKS_BY_ROLE = {
+  user: customerLinks,
+  vendor: vendorLinks,
+  admin: adminLinks,
+};
+
+// Navbar me use hota hai: getLinksForRole(user?.role)
+export const getLinksForRole = (role) => LINKS_BY_ROLE[role] || guestLinks;
+
+// Purana export: Footer aur Home isi ko use karte hain, isliye naam same rakha hai
+export const links = customerLinks;
 
 export const categories = [
   { name: "Weddings", sub: "Make it magical", icon: "💍", bg: "bg-rose-50" },
