@@ -3,6 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import api from "../api";
 import Navbar from "../Components/Navbar";
 import Footer from "../Components/Footer";
+import { useWishlist } from "./Wishlist";
+import Bookingbtn from "../Components/Bookingbtn";
 
 const toList = (v) => {
   if (!v) return [];
@@ -21,10 +23,10 @@ const hideBrokenImage = (e) => {
 };
 
 /* ---------- tiny inline icons (no extra package needed) ---------- */
-const Icon = ({ d, className = "w-4 h-4" }) => (
+const Icon = ({ d, className = "w-4 h-4", fill = "none" }) => (
   <svg
     viewBox="0 0 24 24"
-    fill="none"
+    fill={fill}
     stroke="currentColor"
     strokeWidth="1.8"
     strokeLinecap="round"
@@ -45,6 +47,7 @@ const ICONS = {
     "M9 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM2.5 20a6.5 6.5 0 0113 0M16 4.5a3.5 3.5 0 010 6.5M18 14a6.5 6.5 0 013.5 6",
   alert: "M12 4l9 16H3L12 4zM12 10v4M12 17.5v.01",
   wallet: "M4 7h14a2 2 0 012 2v9a2 2 0 01-2 2H6a2 2 0 01-2-2V7zM4 7l11-3v3M16 13.5h.01",
+  heart: "M12 21s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 11c0 5.6-7 10-7 10z",
 };
 
 /* ---------- styles: sirf ek page-load moment + chhote hovers ---------- */
@@ -88,6 +91,8 @@ export default function Eventsid() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [guests, setGuests] = useState(0);
+  const [toast, setToast] = useState("");
+  const wishlist = useWishlist();
 
   useEffect(() => {
     setLoading(true);
@@ -112,6 +117,13 @@ export default function Eventsid() {
       })
       .finally(() => setLoading(false));
   }, [id]);
+
+  // chhota message 2 second ke liye
+  useEffect(() => {
+    if (!toast) return undefined;
+    const t = setTimeout(() => setToast(""), 2000);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   if (loading)
     return (
@@ -148,6 +160,7 @@ export default function Eventsid() {
       </div>
     );
 
+  const eventId = event.id ?? event._id ?? id;
   const inclusions = toList(event.inclusions);
   const exclusions = toList(event.exclusions);
   const estimate =
@@ -158,6 +171,20 @@ export default function Eventsid() {
   const maxG = event.max_guests || 500;
   // slider ka filled hissa (indigo) dikhane ke liye
   const fill = maxG > minG ? ((guests - minG) / (maxG - minG)) * 100 : 0;
+
+  const saved = wishlist.has(eventId);
+
+  const toggleWish = () => {
+    const r = wishlist.toggle({ ...event, id: eventId });
+    const msg = {
+      added: "Wishlist me jod diya ❤️",
+      removed: "Wishlist se hata diya",
+      full: "Wishlist full hai (max 100). Kuch events hata do.",
+      invalid: "Ye event save nahi ho sakta",
+      error: "Save nahi ho paya. Browser storage band ya full hai.",
+    };
+    setToast(msg[r] || "");
+  };
 
   const stats = [
     { label: "Base price", value: rupee(event.base_price) },
@@ -198,6 +225,20 @@ export default function Eventsid() {
               <Icon d={ICONS.back} /> Events
             </Link>
 
+            {/* Wishlist heart (hero ke top-right me) */}
+            <button
+              type="button"
+              onClick={toggleWish}
+              aria-pressed={saved}
+              aria-label={saved ? "Wishlist se hatao" : "Wishlist me jodo"}
+              title={saved ? "Wishlist se hatao" : "Wishlist me jodo"}
+              className={`top-5 right-4 absolute flex justify-center items-center backdrop-blur rounded-full w-10 h-10 transition-colors ${
+                saved ? "bg-rose-500 text-white" : "bg-white/15 hover:bg-white/30 text-white"
+              }`}
+            >
+              <Icon d={ICONS.heart} className="w-5 h-5" fill={saved ? "currentColor" : "none"} />
+            </button>
+ 
             <div className="right-4 bottom-8 left-4 absolute">
               <div className="flex flex-wrap items-center gap-2 ev-hero-1">
                 {event.category_name && (
@@ -205,7 +246,7 @@ export default function Eventsid() {
                     {event.category_name}
                   </span>
                 )}
-                {event.duration_hours && (
+                {Number(event.duration_hours) > 0 && (
                   <span className="inline-flex items-center gap-1 bg-white/15 backdrop-blur px-3 py-1 rounded-full text-white text-xs">
                     <Icon d={ICONS.clock} className="w-3.5 h-3.5" /> {event.duration_hours} hours
                   </span>
@@ -332,8 +373,9 @@ export default function Eventsid() {
                 </div>
 
                 <div className="space-y-3 mt-6 pt-6 border-slate-100 border-t">
+                    <Bookingbtn/>
                   <Link
-                    to={`/guestlist/${event.id}`}
+                    to={`/guestlist/${eventId}`}
                     className="group flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 shadow-indigo-600/25 hover:shadow-lg py-3 rounded-xl w-full font-semibold text-white text-sm transition-all"
                   >
                     Guest List Banao
@@ -342,12 +384,37 @@ export default function Eventsid() {
                       className="w-4 h-4 transition-transform group-hover:translate-x-0.5"
                     />
                   </Link>
+                 
                   <Link
                     to="/Budgetplanner"
                     className="flex justify-center items-center gap-2 hover:bg-slate-900 py-3 rounded-xl ring-1 ring-slate-300 hover:ring-slate-900 w-full font-semibold text-slate-800 hover:text-white text-sm transition-colors"
                   >
                     <Icon d={ICONS.wallet} /> Budget Plan Karo
                   </Link>
+
+                  {/* Wishlist button */}
+                  <button
+                    type="button"
+                    onClick={toggleWish}
+                    aria-pressed={saved}
+                    className={`flex justify-center items-center gap-2 py-3 rounded-xl w-full font-semibold text-sm transition-colors ${
+                      saved
+                        ? "bg-rose-50 text-rose-600 ring-1 ring-rose-200 hover:bg-rose-100"
+                        : "text-slate-800 ring-1 ring-slate-300 hover:bg-rose-50 hover:text-rose-600 hover:ring-rose-200"
+                    }`}
+                  >
+                    <Icon d={ICONS.heart} fill={saved ? "currentColor" : "none"} />
+                    {saved ? "Wishlist me hai (hatao)" : "Wishlist me jodo"}
+                  </button>
+
+                  {saved && (
+                    <Link
+                      to="/wishlist"
+                      className="block font-medium text-indigo-600 text-sm text-center hover:underline"
+                    >
+                      Meri wishlist dekho →
+                    </Link>
+                  )}
                 </div>
               </div>
             </aside>
@@ -355,6 +422,15 @@ export default function Eventsid() {
         </div>
       </div>
 
+      {toast && (
+        <div
+          role="status"
+          className="bottom-6 left-1/2 z-50 fixed bg-slate-900 shadow-lg px-5 py-3 rounded-full text-white text-sm -translate-x-1/2"
+        >
+          {toast}
+        </div>
+      )}
+{/* <Bookingbtn/> */}
       {/* <Footer /> */}
     </div>
   );
